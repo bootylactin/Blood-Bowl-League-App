@@ -1,0 +1,75 @@
+@CHARSET "ISO-8859-1";
+
+fieldset {
+	border:1px solid #000;
+	padding:6px;
+	color:black;
+}
+legend {
+	color:black;
+}
+
+.SPPs {
+	background-color:#adc687;	
+}
+
+.Misc {
+	background-color:#97badc;
+}
+
+.Inflicted {
+	background-color:#ec9f86;
+}
+
+.Sustained {
+	background-color:#d2bc64;
+}
+
+TABLE.leagueTable TD, TABLE.leagueTable TH {
+	padding:2px 5px;
+}
+
+TABLE.leagueTable TR.oddRow, TABLE.statTable TR.oddRow {
+	background-color:#DFC099;
+}
+/*
+TABLE.leagueTable TH {
+	border-right: 1px solid #DDAE72;
+}
+*/
+
+TABLE.leagueTable TD {
+	border-top: 1px solid #DDAE72;
+	/*border-right: 1px solid #DDAE72;*/
+}
+/*
+TABLE.leagueTable TD.bRight {
+	border-right:0;
+}
+TABLE.leagueTable TD.bTop {
+	border-top:0;
+}
+*/
+.bold {
+	font-weight:bold;
+}
+
+TABLE.leagueTable TR.noTop TD {
+	border-top: none;
+}
+
+SPAN.bonus {
+	color:green;
+	font-weight:bold;
+	padding: 0 0px;
+}
+
+SPAN.penalty {
+	color:#CF0000;
+	font-weight:bold;
+	padding: 0 0px;
+}
+
+.disabled {
+	color:#666;
+}

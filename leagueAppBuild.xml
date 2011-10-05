@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Deploy League App" default="bbd" basedir=".">
+
+    <target name="bbd">
+    	<echo>Deploying to Blood Bowl Digital...</echo> 
+    	
+    	<echo>Copying images folder...</echo>
+		<copy todir="/www/bbd2/components/com_bbql/images/">
+			<fileset dir="images"/>	
+		</copy>
+    	
+    	<echo>Copying includes folder...</echo>
+		<copy todir="/www/bbd2/components/com_bbql/includes/">
+			<fileset dir="includes"/>	
+		</copy>
+    	
+    	<echo>Copying models folder...</echo>
+		<copy todir="/www/bbd2/components/com_bbql/models/">
+			<fileset dir="models"/>	
+		</copy>
+    	
+    	<echo>Copying views folder...</echo>
+		<copy todir="/www/bbd2/components/com_bbql/views/">
+			<fileset dir="views"/>	
+		</copy>
+        
+    	<echo>Copying bbql and controller files...</echo>
+		<copy file="bbql.php" todir="/www/bbd2/components/com_bbql/"/>
+    	<copy file="controller.php" todir="/www/bbd2/components/com_bbql/"/>
+
+
+    </target>
+	
+	<target name="bbql">
+		<echo>Deploying to BBQL...</echo> 
+		
+		<echo>Copying images folder...</echo>
+		<copy todir="/www/bbql/components/com_bbql/images/">
+			<fileset dir="images"/>	
+		</copy>
+    	
+    	<echo>Copying includes folder...</echo>
+		<copy todir="/www/bbql/components/com_bbql/includes/">
+			<fileset dir="includes"/>	
+		</copy>
+    	
+    	<echo>Copying models folder...</echo>
+		<copy todir="/www/bbql/components/com_bbql/models/">
+			<fileset dir="models"/>	
+		</copy>
+    	
+		<echo>Copying views folder...</echo>
+		<copy todir="/www/bbql/components/com_bbql/views/">			
+			<fileset dir="views"/>	
+		</copy>
+		
+		<echo>Copying bbql and controller files...</echo>
+		<copy file="bbql.php" todir="/www/bbql/components/com_bbql/"/>
+    	<copy file="controller.php" todir="/www/bbql/components/com_bbql/"/>
+	
+	</target>
+
+</project> 
