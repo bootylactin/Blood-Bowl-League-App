@@ -42,17 +42,28 @@ class BbqlModelBbql extends JModel
 	function getMyLeagues() {
 		$joomlaUser =& JFactory::getUser();
 		
-//		$sql = "SELECT DISTINCT L.*, status,"
-//			. "(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams "
-//			. " FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID"
-//			. " LEFT OUTER JOIN Team_Listing TL ON L.ID = TL.leagueId"
-//			. " WHERE CommissionerId = '" . $joomlaUser->id . "' or coachId = '" . $joomlaUser->id ."'";
+//		$sql = "SELECT DISTINCT L.*, status,
+//			(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams
+//			FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID
 //
-//		$LeagueQry = $this->dbHandle->query($sql);
-//		$LeagueList = $LeagueQry->fetchAll();
+//			 WHERE CommissionerId = '" . $joomlaUser->id . "'";
 
-		$LeagueList = array();
-		return $LeagueList;
+
+		$sql = "SELECT DISTINCT L.*, status,
+			(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams
+			FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID
+			WHERE L.id IN (
+
+			SELECT leagueId FROM team_listing WHERE coachId = '" . $joomlaUser->id . "' UNION SELECT id FROM league WHERE CommissionerId = '" . $joomlaUser->id . "'
+
+			)";
+		//$sql = "SELECT L.* FROM League L WHERE CommissionerId = '" . $joomlaUser->id . "'";
+
+		$LeagueQry = $this->dbHandle->query($sql);
+		$LeagueList = $LeagueQry->fetchAll();
+
+		//$LeagueList = array();
+		return $LeagueList; 
 	}
 	
 	function getOtherLeagues($excludeList, $filterLetter) {
