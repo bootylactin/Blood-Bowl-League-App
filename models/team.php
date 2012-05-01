@@ -613,6 +613,15 @@ class BbqlModelTeam extends JModel {
 		$this->utils->updateTeamValue($this->teamId);
 		return array("result" => "success", "teamId" => $this->teamId, "msg" => $msg);
 	}
+        
+        function recalculateTeamValue() {
+            $msg = array();
+            $msg[] = "Team Value recalculated successfully";
+            
+            $this->utils->updateTeamValue($this->teamId);
+            return array("result" => "success", "teamId" => $this->teamId, "msg" => $msg);
+            
+        }
 	
 	function downloadteam() {
 		global $systemPathToComponent;

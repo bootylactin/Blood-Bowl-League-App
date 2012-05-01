@@ -338,6 +338,24 @@ class BbqlController extends JController
 			$this->setRedirect( $redirect, "Error downloading team.", "error");
 		}
 	}
+        
+        function recalculateTeamValue() {
+		$model = &$this->getModel('team');
+		$return = $model->recalculateTeamValue();
+		
+		$msg = "";
+		foreach ($return['msg'] as $messages) {
+			$msg = $msg."<li>".$messages."</li>";
+		}
+		
+		if ($return['result'] == "success") {
+			$redirect = "index.php?option=com_bbql&view=team&teamId=".$return['teamId'];
+			$this->setRedirect( $redirect, $msg);
+		} else {
+			$redirect = "index.php?option=com_bbql&view=team&teamId=".$return['teamId'];
+			$this->setRedirect( $redirect, $msg, "error");
+		}
+	}
 	
 	function createLeague() {
 		$model = &$this->getModel('league');

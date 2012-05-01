@@ -40,6 +40,13 @@ if ($this->FullControl == 1) {
 
 <?php include JRoute::_('components/com_bbql/includes/teamNavigation.php'); ?>
 <p><br/></p>
+
+<?php
+if ($user->authorize('com_bbql', 'admin')) {
+    echo '<div style="float:right"><a href="'.$linkRoot.'&task=recalculateTeamValue&teamId='.$team['teamHash'].'">re-calculate team value</a></a></div>';
+}
+?>
+
 <table  class="leagueTable" cellspacing="0">
 	<tr class="underLineRow">
     	<td class="bTop bold">Coach:</td>
@@ -74,7 +81,7 @@ if ($this->FullControl == 1) {
 	</tr>
     <tr class="underLineRow">
     	<td class="bold">Team Value:</td>
-        <td class="bRight"><?php echo $team['iValue'] ?></td>
+        <td class="bRight"><?php echo $team['iValue'] ?> </td>
         <td class="bold">Assistant Coaches:</td>
         <td class="bRight"><?php echo $team['iAssistantCoaches'] ?></td>
         <?php if ($canEdit) { ?>

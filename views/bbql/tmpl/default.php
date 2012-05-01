@@ -10,7 +10,7 @@ $user =& JFactory::getUser();
 <table  class="leagueTable" cellspacing="0">
 <?php if (!empty($this->leagues)) { ?>
     <tr valign="bottom">
-        <th>League</th>
+        <th>Leagues</th>
         <th>Teams</th>
         <th>Commissioner</th>
         <th>Password?</th>
