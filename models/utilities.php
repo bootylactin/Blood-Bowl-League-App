@@ -197,74 +197,92 @@ class BbqlModelUtilities extends JModel
 		return $spirallingExpense;
 	}
 	
-	function convertSQLiteTablesToMySQL($tableToConvert) {
-		/**** SQLITE CONVERSION!!!!!!   **********/
+	function convertSQLiteTablesToMySQL() {
+		global $bbqlDb;
+		$joomlaDb = & JFactory::getDBO();
+		
 		$mtime = microtime(); 
 		$mtime = explode(" ",$mtime); 
 		$mtime = $mtime[1] + $mtime[0]; 
 		$starttime = $mtime; 
-
+		
 		set_time_limit(0);
+		
+		$tableArray = array('Calendar','Coach','Equipment_Listing','Inducement_Types',
+			'Inducements','League','League_Status','Player_Casualties','Player_Casualty_Types',
+			'Player_Listing','Player_Skills','Player_Type_Skill_Categories_Double',
+			'Player_Type_Skill_Categories_Normal','Player_Type_Skills','Player_Types',
+			'Races','Skill_Categories','Skill_Listing','Statistics_Players',
+			'Statistics_Season_Players','Statistics_Season_Teams','Statistics_Teams',
+			'Strings_Localized','Team_Listing');
+		
+		//$tableArray = array('Inducement_Types','Inducements','League_Status','Player_Casualty_Types');
 
 		//$tableToConvert = "Player_Types";
-		$startRow = 0;
-		$rowIncrement = 500;
-		$count = 0;
+		
+		
+		foreach($tableArray AS $tableToConvert) {
+			$startRow = 0;
+			$rowIncrement = 500;
+			$count = 0;
+			
+			
+			$recordCount = $bbqlDb->query("SELECT count(1) FROM ".$tableToConvert)->fetch();
+			$recordCount = $recordCount[0];
 
-		$recordCount = $bbqlDb->query("SELECT count(1) FROM ".$tableToConvert)->fetch();
-		$recordCount = $recordCount[0];
+			//$recordCount = 10000;
 
-		//$recordCount = 10000;
+			//echo $recordCount; die();
 
-		//echo $recordCount; die();
+			for ($startRow; $startRow < $recordCount; $startRow += $rowIncrement) {
 
-		for ($startRow; $startRow < $recordCount; $startRow += $rowIncrement) {
+				$sql = "SELECT * FROM ".$tableToConvert." LIMIT ".$startRow.", ".$rowIncrement;
 
-			$sql = "SELECT * FROM ".$tableToConvert." LIMIT ".$startRow.", ".$rowIncrement;
+				$result = $bbqlDb->query($sql)->fetchAll();
 
-			$result = $bbqlDb->query($sql)->fetchAll();
+				$keys = array_keys($result[0]);
+				$tableColumns = array();
 
-			$keys = array_keys($result[0]);
-			$tableColumns = array();
-
-			//create an array of the table column names
-			for ($i=0; $i<count($keys); $i+=2) {
-				$tableColumns[] = $keys[$i];
-			}
-
-			//create a string of the column names for use in the loop below
-			$columnStr = "";
-			foreach($tableColumns as $value) {
-				$columnStr = $columnStr.$value . ", ";
-			}
-			$columnStr = substr($columnStr, 0, -2); //remove trailing comma and space
-
-
-			foreach($result as $dbRow) {
-				$count++;
-
-				//Dynamically construct insert statement
-				$insert = "INSERT INTO #_bbla_".$tableToConvert." (".$columnStr.") VALUES (";
-				foreach($tableColumns as $value) {
-					$insert = $insert.$dbJoomla->quote($dbRow[$value]) . ", ";
+				//create an array of the table column names
+				for ($i=0; $i<count($keys); $i+=2) {
+					$tableColumns[] = $keys[$i];
 				}
-				$insert = substr($insert, 0, -2); //remove trailing comma and space
-				$insert = $insert.")";
 
-				//print_r($insert.";"); die();
+				//create a string of the column names for use in the loop below
+				$columnStr = "";
+				foreach($tableColumns as $value) {
+					$columnStr = $columnStr.$value . ", ";
+				}
+				$columnStr = substr($columnStr, 0, -2); //remove trailing comma and space
+
+
+				foreach($result as $dbRow) {
+					$count++;
+
+					//Dynamically construct insert statement
+					$insert = "INSERT INTO #__bbla_".$tableToConvert." (".$columnStr.") VALUES (";
+					foreach($tableColumns as $value) {
+						$insert = $insert.$joomlaDb->quote($dbRow[$value]) . ", ";
+					}
+					$insert = substr($insert, 0, -2); //remove trailing comma and space
+					$insert = $insert.")";
+
+					//print_r($insert.";"); die();
 
 
 
-				//run the insert statement
-				$dbJoomla->setQuery($insert);
-				$res = $dbJoomla->query();
-				if (!$res) {
-					print_r($count.": ".$dbRow['strName']." -> ".$dbRow['playerHash']);
-					var_dump($res);
-				} 
+					//run the insert statement
+					$joomlaDb->setQuery($insert);
+					$res = $joomlaDb->query();
+					if (!$res) {
+						echo $joomlaDb->getErrorMsg()."<br/><br/>";	
+					} 
 
+				}
+				print_r("<br/>cycle<br/>");
 			}
-			print_r("<br/><br/>cycle<br/><br/>");
+			
+			echo "<b>".$tableToConvert." conversion complete.</b><br/><br/>";
 		}
 
 		print_r("Finished ".$count." records.");
@@ -276,7 +294,6 @@ class BbqlModelUtilities extends JModel
 		$totaltime = ($endtime - $starttime); 
 		echo "This page was created in ".$totaltime." seconds"; 
 		die();
-		/************** END SQLITE CONVERSION  *******************/
 	}
 	
 	////////////////////////////////////////////////////////
