@@ -197,6 +197,88 @@ class BbqlModelUtilities extends JModel
 		return $spirallingExpense;
 	}
 	
+	function convertSQLiteTablesToMySQL($tableToConvert) {
+		/**** SQLITE CONVERSION!!!!!!   **********/
+		$mtime = microtime(); 
+		$mtime = explode(" ",$mtime); 
+		$mtime = $mtime[1] + $mtime[0]; 
+		$starttime = $mtime; 
+
+		set_time_limit(0);
+
+		//$tableToConvert = "Player_Types";
+		$startRow = 0;
+		$rowIncrement = 500;
+		$count = 0;
+
+		$recordCount = $bbqlDb->query("SELECT count(1) FROM ".$tableToConvert)->fetch();
+		$recordCount = $recordCount[0];
+
+		//$recordCount = 10000;
+
+		//echo $recordCount; die();
+
+		for ($startRow; $startRow < $recordCount; $startRow += $rowIncrement) {
+
+			$sql = "SELECT * FROM ".$tableToConvert." LIMIT ".$startRow.", ".$rowIncrement;
+
+			$result = $bbqlDb->query($sql)->fetchAll();
+
+			$keys = array_keys($result[0]);
+			$tableColumns = array();
+
+			//create an array of the table column names
+			for ($i=0; $i<count($keys); $i+=2) {
+				$tableColumns[] = $keys[$i];
+			}
+
+			//create a string of the column names for use in the loop below
+			$columnStr = "";
+			foreach($tableColumns as $value) {
+				$columnStr = $columnStr.$value . ", ";
+			}
+			$columnStr = substr($columnStr, 0, -2); //remove trailing comma and space
+
+
+			foreach($result as $dbRow) {
+				$count++;
+
+				//Dynamically construct insert statement
+				$insert = "INSERT INTO #_bbla_".$tableToConvert." (".$columnStr.") VALUES (";
+				foreach($tableColumns as $value) {
+					$insert = $insert.$dbJoomla->quote($dbRow[$value]) . ", ";
+				}
+				$insert = substr($insert, 0, -2); //remove trailing comma and space
+				$insert = $insert.")";
+
+				//print_r($insert.";"); die();
+
+
+
+				//run the insert statement
+				$dbJoomla->setQuery($insert);
+				$res = $dbJoomla->query();
+				if (!$res) {
+					print_r($count.": ".$dbRow['strName']." -> ".$dbRow['playerHash']);
+					var_dump($res);
+				} 
+
+			}
+			print_r("<br/><br/>cycle<br/><br/>");
+		}
+
+		print_r("Finished ".$count." records.");
+
+		$mtime = microtime(); 
+		$mtime = explode(" ",$mtime); 
+		$mtime = $mtime[1] + $mtime[0]; 
+		$endtime = $mtime; 
+		$totaltime = ($endtime - $starttime); 
+		echo "This page was created in ".$totaltime." seconds"; 
+		die();
+		/************** END SQLITE CONVERSION  *******************/
+	}
+	
 	////////////////////////////////////////////////////////
 	// Function:         dump
 	// Inspired from:     PHP.net Contributions
