@@ -19,9 +19,11 @@ class BbqlModelPlayer extends JModel {
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
+		global $systemPathToComponent, $httpPathToComponent, $joomlaDb, $bbqlDb;
 		
 		$this->playerId = JRequest::getVar('playerId');
+		
+		$this->joomlaDb = JFactory::getDBO();
 		
 		$this->dbHandle = $bbqlDb;
 		
@@ -53,10 +55,14 @@ class BbqlModelPlayer extends JModel {
 		$teamHash = $team['teamId'];
 		$sql = "SELECT PL.*, PL.strName, PL.Characteristics_fMovementAllowance MA,PL.Characteristics_fStrength ST, " .
 			" PL.Characteristics_fAgility AG, PL.Characteristics_fArmourValue AV, PT.idStrings_Localized AS positionId, PL.teamHash " .
-			" FROM Player_Listing PL INNER JOIN Player_Types PT ON PL.idPlayer_Types = PT.ID " .
+			" FROM #__bbla_Player_Listing PL INNER JOIN #__bbla_Player_Types PT ON PL.idPlayer_Types = PT.ID " .
 			" WHERE PL.teamHash = '".$teamHash."' AND bRetired <> 1" .
 			" ORDER BY iNumber";
-		$fullRoster = $this->dbHandle->query($sql)->fetchAll();
+		
+		//var_dump($this->joomlaDb);die();
+		
+		$this->joomlaDb->setQuery($sql);
+		$fullRoster = $this->joomlaDb->loadAssocList();
 
 		foreach ($fullRoster as $index => $player) {
 			if ($player['playerHash'] == $this->playerId) {

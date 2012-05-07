@@ -91,8 +91,10 @@ class BbqlModelUpload extends JModel
 		
 		// Upload the file to your specified path.
 		if(move_uploaded_file($_FILES['userfile']['tmp_name'],$this->rel_processing_path.$this->filename)) {
+			/**** DEPRECATED
 			//first we have to make the .db format accessible to php
 			$this->convertDBFile($this->filename);
+			****/
 			
 			//now access the DB to determine the teamID
 			$db = 'sqlite:'.$this->abs_processing_path.$this->filename;
@@ -311,6 +313,7 @@ class BbqlModelUpload extends JModel
 		if (!file_exists($upload_path))
 			mkdir($upload_path);
 		
+		
 		// Check if we can upload to the specified path, if not DIE and inform the user.
 		if(!is_writable($upload_path) OR !is_writable($this->rel_processing_path))
 			die('You cannot upload to the specified directory, please CHMOD it to 777.');
@@ -318,9 +321,11 @@ class BbqlModelUpload extends JModel
 		
 		// Upload the file to your specified path.
 		if(move_uploaded_file($_FILES['userfile']['tmp_name'],$this->rel_processing_path.$this->filename)) {
+			/**** DEPRECATED
 			//first we have to make the .db format accessible to php
-			$this->convertDBFile($this->filename);
-		
+			$this->convertDBFile($this->filename); 
+			****/
+					
 			//now access the DB to determine the teamIDs
 			$db = 'sqlite:'.$this->abs_processing_path.$this->filename;
 			
@@ -959,6 +964,7 @@ class BbqlModelUpload extends JModel
 			echo 'There was an error during the file upload.  Please try again.'; // It failed :(
 	}
     
+	/**** DEPRECATED
     //Converts BB .db to PHP useable format
 	function convertDBFile($fileName) {
 		
@@ -971,9 +977,9 @@ class BbqlModelUpload extends JModel
 		$myFile = $this->httpPathToComponent.DS.'uploads'.DS.'processing'.DS.$fileName;
 		unlink($myFile);
 		
-		/**/
 		//create new .db from dump via shell, which PHP will be able to read
 		$cmd =  $this->systemPathToComponent.DS.'resources'.DS.'sqlite3 '.$this->abs_processing_path.$fileName.' < '.$this->abs_processing_path.$fileName.'.sql';
 		$output = shell_exec($cmd);	
 	}
+	****/
 }
