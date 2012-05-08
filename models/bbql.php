@@ -20,14 +20,12 @@ class BbqlModelBbql extends JModel
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
+		global $systemPathToComponent, $httpPathToComponent;
 		$this->systemPathToComponent = $systemPathToComponent;
 		
 		$this->leagueId = JRequest::getVar('leagueId');
 		
 		$this->joomlaDb = JFactory::getDBO();
-		
-		$this->dbHandle = $bbqlDb;
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -38,7 +36,6 @@ class BbqlModelBbql extends JModel
 	}
 	
 	function __destruct() {
-		unset($this->dbHandle);
 		unset($this->joomlaDb);
 	}
 	
