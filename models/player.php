@@ -42,11 +42,24 @@ class BbqlModelPlayer extends JModel {
 	}
 	
 	function getTeamAndLeagueInfo() {
-		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, " .
-			" TL.teamHash as teamId, L.FullControl FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID" .
-			" INNER JOIN Player_Listing PL ON TL.teamHash = PL.teamHash" .
-			" WHERE playerHash = '".$this->playerId."'";
+		/*** SQLite query
+		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
+			TL.teamHash as teamId, L.FullControl 
+			FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID
+			INNER JOIN Player_Listing PL ON TL.teamHash = PL.teamHash
+			WHERE playerHash = '".$this->playerId."'";
+		
 		return $this->dbHandle->query($sql)->fetch();
+		***/
+		
+		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
+			TL.teamHash as teamId, L.FullControl 
+			FROM #__bbla_Team_Listing TL INNER JOIN #__bbla_League L ON TL.leagueId = L.ID
+			INNER JOIN #__bbla_Player_Listing PL ON TL.teamHash = PL.teamHash
+			WHERE playerHash = '".$this->playerId."'";
+
+		$this->joomlaDb->setQuery($sql);
+		return ($this->joomlaDb->loadAssoc());
 	}
 	
 	function getPlayerInfo() {

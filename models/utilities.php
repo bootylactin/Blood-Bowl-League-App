@@ -217,10 +217,9 @@ class BbqlModelUtilities extends JModel
 			'Strings_Localized','Team_Listing');
 		
 		//$tableArray = array('Inducement_Types','Inducements','League_Status','Player_Casualty_Types');
+		
+		//$tableArray = array('Team_Listing');
 
-		//$tableToConvert = "Player_Types";
-		
-		
 		foreach($tableArray AS $tableToConvert) {
 			$startRow = 0;
 			$rowIncrement = 500;
@@ -267,10 +266,6 @@ class BbqlModelUtilities extends JModel
 					$insert = substr($insert, 0, -2); //remove trailing comma and space
 					$insert = $insert.")";
 
-					//print_r($insert.";"); die();
-
-
-
 					//run the insert statement
 					$joomlaDb->setQuery($insert);
 					$res = $joomlaDb->query();
@@ -279,20 +274,20 @@ class BbqlModelUtilities extends JModel
 					} 
 
 				}
-				print_r("<br/>cycle<br/>");
+				// echo($tableToConvert.": ".$count." records processed<br/>");
 			}
-			
-			echo "<b>".$tableToConvert." conversion complete.</b><br/><br/>";
+			echo "<b>".$tableToConvert." conversion complete.</b> ".$count." records processed<br/><br/>";
 		}
 
-		print_r("Finished ".$count." records.");
+		//echo("Finished ".$count." records.<br/>");
 
 		$mtime = microtime(); 
 		$mtime = explode(" ",$mtime); 
 		$mtime = $mtime[1] + $mtime[0]; 
 		$endtime = $mtime; 
 		$totaltime = ($endtime - $starttime); 
-		echo "This page was created in ".$totaltime." seconds"; 
+		$minutetime = $totaltime/60;
+		echo "This page was created in ".$minutetime." minutes";
 		die();
 	}
 	

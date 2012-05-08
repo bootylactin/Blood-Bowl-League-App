@@ -146,7 +146,7 @@ class BbqlModelLeague extends JModel
 			"ORDER BY Inflicted_iCasualties DESC, Inflicted_iDead DESC, Inflicted_iKO DESC, Inflicted_iStuns DESC Limit 10";
 		$returnStruct['mostCAS'] = $this->dbHandle->query($sqlCAS)->fetchAll();
 		
-		$sqlCOMP = $sqlBase." AND Inflicted_iPasses > 0 ORDER BY Inflicted_iPasses DESC Limit 10";
+		$sqlCOMP = $sqlBase." AND Inflicted_iPasses > 0 ORDER BY Inflicted_iPasses DESC, Inflicted_iMetersPassing DESC Limit 10";
 		$returnStruct['mostCOMP'] = $this->dbHandle->query($sqlCOMP)->fetchAll();
 		
 		$sqlINT = $sqlBase." AND Inflicted_iInterceptions > 0 ORDER BY Inflicted_iInterceptions DESC Limit 10";
