@@ -39,6 +39,7 @@ class BbqlModelPlayer extends JModel {
 	
 	function __destruct() {
 		unset($this->dbHandle);
+		unset($this->joomlaDb);
 	}
 	
 	function getTeamAndLeagueInfo() {
