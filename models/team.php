@@ -618,7 +618,6 @@ class BbqlModelTeam extends JModel {
             $msg = array();
             $msg[] = "Team Value recalculated successfully";
             
-			$this->utils->convertSQLiteTablesToMySQL('Player_Skills');
             $this->utils->updateTeamValue($this->teamId);
             return array("result" => "success", "teamId" => $this->teamId, "msg" => $msg);
             
