@@ -21,7 +21,7 @@ class BbqlModelScheduler extends JModel {
 		
 		global $httpPathToComponent, $bbqlDb;
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
 
 		//include the bbql class
 		include_once($httpPathToComponent.DS.'models'.DS.'league.php');

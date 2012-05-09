@@ -22,7 +22,7 @@ class BbqlModelLeague extends JModel
 		
 		$this->leagueId = JRequest::getVar('leagueId');
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
 		
 		$this->joomlaDb = JFactory::getDBO();
 		
@@ -68,17 +68,19 @@ class BbqlModelLeague extends JModel
 	//handle the receiving of the submitted file in this method
 	function createLeague() {
 		//insert team info
-		$sql = "INSERT INTO League (Name,Password,CommissionerId,StatusId,MultipleTeams,FullControl) " .
+		$sql = "INSERT INTO #__bbla_League (Name,Password,CommissionerId,StatusId,MultipleTeams,FullControl) " .
 				"VALUES(".
-					$this->dbHandle->quote($_POST['name']).",".
-					$this->dbHandle->quote($_POST['password']).",".
-					$this->dbHandle->quote($_POST['CommissionerId']).",".
+					$this->joomlaDb->quote($_POST['name']).",".
+					$this->joomlaDb->quote($_POST['password']).",".
+					$this->joomlaDb->quote($_POST['CommissionerId']).",".
 					"1,".
-					$this->dbHandle->quote($_POST['multipleTeams']).",".
-					$this->dbHandle->quote($_POST['fullControl']).
+					$this->joomlaDb->quote($_POST['multipleTeams']).",".
+					$this->joomlaDb->quote($_POST['fullControl']).
 				")";
 
-		$this->dbHandle->query(stripSlashes($sql));
+		
+		$this->joomlaDb->setQuery(stripSlashes($sql));
+		$test = $this->joomlaDb->query();
 
 		echo 'Your file upload was successful!'; // It worked.
 	}

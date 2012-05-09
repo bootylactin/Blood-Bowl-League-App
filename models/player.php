@@ -25,7 +25,7 @@ class BbqlModelPlayer extends JModel {
 		
 		$this->joomlaDb = JFactory::getDBO();
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -87,7 +87,7 @@ class BbqlModelPlayer extends JModel {
 			}
 		}
 		$playerDetails['coachId'] = $team['coachId'];
-		
+				
 		$returnStruct = array(
 			"playerDetails" => $playerDetails, 
 			"skillCategories" => $skillCategories,
@@ -142,27 +142,27 @@ class BbqlModelPlayer extends JModel {
 
 	
 	function getPlayerSkillsInjuries($playerHash, $playerType) {
+		$skills = array();
 		// default skills
-		$sql = "SELECT idSkill_Listing FROM Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
-		$defSkillsQry = $this->dbHandle->query($sql);
-			
+		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['default'] = $this->joomlaDb->loadAssocList();
+		
 		// acquired skills
-		$sql = "SELECT idSkill_Listing FROM Player_Skills WHERE playerHash = '" . $playerHash . "'";
-		$acqSkillsQry = $this->dbHandle->query($sql);
+		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Skills WHERE playerHash = '" . $playerHash . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['acquired'] = $this->joomlaDb->loadAssocList();
+		
 		// injuries
-		$sql = "SELECT idPlayer_Casualty_Types FROM Player_Casualties WHERE playerHash = '" . $playerHash . "'";
-		$injuryQry = $this->dbHandle->query($sql);
+		$sql = "SELECT idPlayer_Casualty_Types FROM #__bbla_Player_Casualties WHERE playerHash = '" . $playerHash . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['injuries'] = $this->joomlaDb->loadAssocList();
+		
 		// default attributes
 		$sql = "SELECT Characteristics_fMovementAllowance MA, Characteristics_fStrength ST,
-				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM Player_Types WHERE ID = '" . $playerType . "'";
-		$attributesQry = $this->dbHandle->query($sql);
-		
-		
-		$skills = array();
-		$skills['default'] = $defSkillsQry->fetchAll();
-		$skills['acquired'] = $acqSkillsQry->fetchAll();
-		$skills['injuries'] = $injuryQry->fetchAll();
-		$skills['attributes'] = $attributesQry->fetchAll();
+				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM #__bbla_Player_Types WHERE ID = '" . $playerType . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['attributes'] = $this->joomlaDb->loadAssocList();
 		
 		return $skills;
 	}
@@ -197,18 +197,20 @@ class BbqlModelPlayer extends JModel {
 	}
 	
 	function getPlayerSkillCategories($playerType) {
-		$sql = "SELECT CONSTANT as Category	FROM Player_Type_Skill_Categories_Normal ptscn 
-			INNER JOIN Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
+		$sql = "SELECT CONSTANT as Category	FROM #__bbla_Player_Type_Skill_Categories_Normal ptscn 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
 			WHERE ptscn.idPlayer_Types = '".$playerType."'".
 			" ORDER BY Category ";
 		
-		$struct['normal'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['normal'] =	$this->joomlaDb->loadAssocList();
 		
-		$sql = "SELECT CONSTANT as Category	FROM Player_Type_Skill_Categories_Double ptscd 
-			INNER JOIN Skill_Categories sc ON ptscd.idSkill_Categories = sc.ID
+		$sql = "SELECT CONSTANT as Category	FROM #__bbla_Player_Type_Skill_Categories_Double ptscd 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscd.idSkill_Categories = sc.ID
 			WHERE ptscd.idPlayer_Types = '".$playerType."'".
 			"ORDER BY Category";
-		$struct['doubles'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['doubles'] = $this->joomlaDb->loadAssocList();
 		
 		return $struct;
 	}
