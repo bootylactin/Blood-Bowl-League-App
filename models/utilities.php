@@ -11,8 +11,25 @@ jimport( 'joomla.application.component.model' );
 /**
  * BBQL Model
  */
-class BbqlModelUtilities extends JModel
-{
+class BbqlModelUtilities extends JModel {
+	/**
+	 * Constructor
+	 */
+	function __construct() {
+		parent::__construct();
+		
+		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
+		
+		$this->joomlaDb = JFactory::getDBO();
+		
+		$this->user =& JFactory::getUser();
+	}
+	
+	function __destruct() {
+		unset($this->dbHandle);
+		unset($this->joomlaDb);
+	}
+	
 	function getUserList() {
 		global $userList;
 		return $userList;
@@ -141,23 +158,30 @@ class BbqlModelUtilities extends JModel
 		global $bbqlDb;
 		//had to break complex update query into three pieces due to processing time
 		//get player values
-		$sql = "SELECT sum(PL.iValue) AS playerValue FROM Player_Listing PL WHERE PL.teamHash = '".$teamId."' AND PL.iMatchSuspended = 0 AND PL.bRetired = 0";
-		$playerValue = $bbqlDb->query($sql)->fetch();
+		$sql = "SELECT sum(PL.iValue) AS playerValue FROM #__bbla_Player_Listing PL WHERE PL.teamHash = '".$teamId."' AND PL.iMatchSuspended = 0 AND PL.bRetired = 0";
+		$this->joomlaDb->setQuery($sql);
+		$playerValue = $this->joomlaDb->loadResult();
+		//$playerValue = $bbqlDb->query($sql)->fetch();
 		
 		//get value of team items
-		$sql = "SELECT (TL.iPopularity*10 + TL.iCheerleaders*10 + TL.iAssistantCoaches*10 + TL.bApothecary*50 + " .
-			" TL.iRerolls*R.iRerollPrice/1000) AS teamValue FROM Team_Listing TL " .
-			" INNER JOIN Races R ON TL.idRaces = R.ID " .
-			" WHERE TL.teamHash = '".$teamId."'";
-		$teamValue = $bbqlDb->query($sql)->fetch();
+		$sql = "SELECT (TL.iPopularity*10 + TL.iCheerleaders*10 + TL.iAssistantCoaches*10 + TL.bApothecary*50 +
+			TL.iRerolls*R.iRerollPrice/1000) AS teamValue FROM #__bbla_Team_Listing TL
+			INNER JOIN #__bbla_Races R ON TL.idRaces = R.ID
+			WHERE TL.teamHash = '".$teamId."'";
+		$this->joomlaDb->setQuery($sql);
+		$teamValue = $this->joomlaDb->loadResult();
+		//$teamValue = $bbqlDb->query($sql)->fetch();
 		
+
 		//total the player and team items
-		$fullValue = $playerValue['playerValue'] + $teamValue['teamValue'];
+		$fullValue = $playerValue + $teamValue;
 		
 		//update the team value
-		$sql = "UPDATE Team_Listing SET iValue = ".$fullValue.
+		$sql = "UPDATE #__bbla_Team_Listing SET iValue = ".$fullValue.
 			" WHERE teamHash = '".$teamId."'";
-		$bbqlDb->query($sql);
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
+		//$bbqlDb->query($sql);
 	}
 	
 	function getDefaultPlayerAttributes() {

@@ -203,6 +203,7 @@ class BbqlModelPlayer extends JModel {
 	}
 	
 	function getPlayerSkillCategories($playerType) {
+		$struct = array();
 		$sql = "SELECT CONSTANT as Category	FROM #__bbla_Player_Type_Skill_Categories_Normal ptscn 
 			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
 			WHERE ptscn.idPlayer_Types = '".$playerType."'".
@@ -348,8 +349,10 @@ class BbqlModelPlayer extends JModel {
 			return array("result" => "error");
 		} else {
 			//retire player
-			$sql = "UPDATE Player_Listing SET bRetired = 1 WHERE playerHash = '".$this->playerId."'";
-			$this->dbHandle->query($sql);
+			$sql = "UPDATE #__bbla_Player_Listing SET bRetired = 1 WHERE playerHash = '".$this->playerId."'";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
+			//$this->dbHandle->query($sql);
 			
 			//run Journeyman routine to see if journeymenHireFire flag needs to be reset
 			$this->processJourneymen($teamId);
@@ -411,13 +414,17 @@ class BbqlModelPlayer extends JModel {
 	
 	function processJourneymen($teamId) {
 		//grab a count of the journeymen on the team
-		$sql = "SELECT count(*) as journeyman FROM Player_Listing WHERE teamHash = '".$teamId."' AND journeyman = 1 AND bRetired = 0";
-		$qry = $this->dbHandle->query($sql)->fetch();
+		$sql = "SELECT count(*) as journeyman FROM #__bbla_Player_Listing WHERE teamHash = '".$teamId."' AND journeyman = 1 AND bRetired = 0";
+		$this->joomlaDb->setQuery($sql);
+		$journeyman = $this->joomlaDb->loadResult();
+		//$qry = $this->dbHandle->query($sql)->fetch();
 
 		//if no Journeyman are found, reset the postMatch flag
-		if ($qry['journeyman'] == 0) {
+		if ($journeyman == 0) {
 			$sql = "UPDATE Team_Listing set journeymenHireFire = 0 WHERE teamHash = '".$teamId."'";
-			$this->dbHandle->query($sql);
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
+			//$this->dbHandle->query($sql);
 		}
 	}
 	
