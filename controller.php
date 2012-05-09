@@ -357,6 +357,12 @@ class BbqlController extends JController
 		}
 	}
 	
+	function convertToMySQL() {
+		$model = &$this->getModel('utilities');
+		$model->convertSQLiteTablesToMySQL();
+	}
+		
+	
 	function createLeague() {
 		$model = &$this->getModel('league');
 		$teamId = $model->createLeague();

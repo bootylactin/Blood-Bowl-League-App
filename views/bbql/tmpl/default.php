@@ -5,6 +5,8 @@ defined('_JEXEC') or die('Restricted access');
 include JRoute::_('components/com_bbql/includes/navigation.php');
 $user =& JFactory::getUser();
 ?>
+<br/><br/>
+<a href="/index.php?option=com_bbql&task=convertToMySQL">Convert SQLite tables to MySQL</a>
 
 <h4>My Leagues</h4>
 <table  class="leagueTable" cellspacing="0">

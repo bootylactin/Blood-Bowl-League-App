@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS `jos_bbla_Coach`;
 CREATE TABLE jos_bbla_Coach (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,strName CHAR(50) NOT NULL,strTag_Voice CHAR(10) NOT NULL,strTag_Head CHAR(10) NOT NULL,Statistics_iMatchPlayed INTEGER ,Statistics_iWins INTEGER ,Statistics_iDraws INTEGER ,Statistics_iLoss INTEGER ,Statistics_iTouchdowns INTEGER ,Statistics_Inflicted_iExclusions INTEGER ,Statistics_Taken_iExclusions INTEGER ,Statistics_Taken_iTouchdowns INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Equipment_Listing`;
-CREATE TABLE jos_bbla_Equipment_Listing (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,idStrings_Localized INTEGER ,strName VARCHAR(255) NOT NULL,idRaces INTEGER ,idPlayer_Types INTEGER ,idEquipment_Types INTEGER ,idEquipment_Visuals INTEGER ,iPrice INTEGER ,idPlayer_Levels INTEGER ,iDurability INTEGER ,idCharacteristics_Bonus INTEGER ,idCharacteristics_Malus INTEGER ,iQuantifier_Bonus INTEGER ,iQuantifier_Malus INTEGER ,bUseable INTEGER ,fBuffProba real ,bCustom INTEGER );
+CREATE TABLE jos_bbla_Equipment_Listing (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,idStrings_Localized INTEGER ,strName VARCHAR(255),idRaces INTEGER ,idPlayer_Types INTEGER ,idEquipment_Types INTEGER ,idEquipment_Visuals INTEGER ,iPrice INTEGER ,idPlayer_Levels INTEGER ,iDurability INTEGER ,idCharacteristics_Bonus INTEGER ,idCharacteristics_Malus INTEGER ,iQuantifier_Bonus INTEGER ,iQuantifier_Malus INTEGER ,bUseable INTEGER ,fBuffProba real ,bCustom INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Inducement_Types`;
 CREATE TABLE jos_bbla_Inducement_Types (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,CONSTANT CHAR(10) NOT NULL,idStrings_Localized INTEGER );
@@ -44,7 +44,7 @@ DROP TABLE IF EXISTS `jos_bbla_Player_Types`;
 CREATE TABLE jos_bbla_Player_Types (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,DATA_CONSTANT CHAR(75) ,idRaces INTEGER ,idPlayer_BaseTypes INTEGER ,idPlayer_Name_Types INTEGER ,idStrings_Localized INTEGER ,strName CHAR(40) ,Characteristics_fMovementAllowance real ,Characteristics_fStrength real ,Characteristics_fAgility real ,Characteristics_fArmourValue real ,iPrice INTEGER ,iMaxQuantity INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Races`;
-CREATE TABLE jos_bbla_Races (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,DATA_CONSTANT CHAR(25) ,idStrings_Localized INTEGER ,idStrings_Localized_Info INTEGER ,strName CHAR(20) NOT NULL,iRerollPrice INTEGER );
+CREATE TABLE jos_bbla_Races (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,DATA_CONSTANT CHAR(25) ,idStrings_Localized INTEGER ,idStrings_Localized_Info INTEGER ,strName CHAR(20),iRerollPrice INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Skill_Categories`;
 CREATE TABLE jos_bbla_Skill_Categories (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,CONSTANT VARCHAR(255) ,idStrings_Localized INTEGER );

@@ -207,7 +207,7 @@ class BbqlModelUtilities extends JModel
 		$starttime = $mtime; 
 		
 		set_time_limit(0);
-		
+
 		$tableArray = array('Calendar','Coach','Equipment_Listing','Inducement_Types',
 			'Inducements','League','League_Status','Player_Casualties','Player_Casualty_Types',
 			'Player_Listing','Player_Skills','Player_Type_Skill_Categories_Double',
@@ -216,9 +216,7 @@ class BbqlModelUtilities extends JModel
 			'Statistics_Season_Players','Statistics_Season_Teams','Statistics_Teams',
 			'Strings_Localized','Team_Listing');
 		
-		//$tableArray = array('Inducement_Types','Inducements','League_Status','Player_Casualty_Types');
-		
-		//$tableArray = array('Calendar');
+		//$tableArray = array('Equipment_Listing','Races');
 
 		foreach($tableArray AS $tableToConvert) {
 			$startRow = 0;
