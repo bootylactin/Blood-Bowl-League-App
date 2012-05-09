@@ -339,7 +339,7 @@ class BbqlController extends JController
 		}
 	}
         
-        function recalculateTeamValue() {
+	function recalculateTeamValue() {
 		$model = &$this->getModel('team');
 		$return = $model->recalculateTeamValue();
 		
@@ -356,6 +356,12 @@ class BbqlController extends JController
 			$this->setRedirect( $redirect, $msg, "error");
 		}
 	}
+	
+	function convertToMySQL() {
+		$model = &$this->getModel('utilities');
+		$model->convertSQLiteTablesToMySQL();
+	}
+		
 	
 	function createLeague() {
 		$model = &$this->getModel('league');

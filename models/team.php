@@ -30,7 +30,9 @@ class BbqlModelTeam extends JModel {
 		
 		$this->teamId = JRequest::getVar('teamId');
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
+		
+		$this->joomlaDb = JFactory::getDBO();
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -51,18 +53,19 @@ class BbqlModelTeam extends JModel {
 	}
 	
 	function getLeagueInfo() {
-		$sql = "SELECT TL.leagueId, L.name AS leagueName, FullControl FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID
+		$sql = "SELECT TL.leagueId, L.name AS leagueName, FullControl FROM #__bbla_Team_Listing TL INNER JOIN #__bbla_League L ON TL.leagueId = L.ID
 			WHERE teamHash = '".$this->teamId."'";
-		
-		return $this->dbHandle->query($sql)->fetch();
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssoc();
 	}
 	
 	function getTeamDetails() {
 		// get team information from database
 		$sql = "SELECT TL.*, R.iRerollPrice
-				FROM Team_Listing TL INNER JOIN Races R ON TL.idRaces = R.ID
+				FROM #__bbla_Team_Listing TL INNER JOIN #__bbla_Races R ON TL.idRaces = R.ID
 				WHERE teamHash = '" . $this->teamId . "'";
-		$teamInfo = $this->dbHandle->query($sql)->fetch();
+		$this->joomlaDb->setQuery($sql);
+		$teamInfo = $this->joomlaDb->loadAssoc();
 
 		return $teamInfo;
 	}
@@ -74,11 +77,11 @@ class BbqlModelTeam extends JModel {
 				PL.idPlayer_Levels, PL.iExperience, PL.iValue, PL.iMatchSuspended, PL.iNbLevelsUp, bDead, bRetired, iSkinTextureVariant,
 				PL.LevelUp_iRollResult, PL.LevelUp_iRollResult2, PL.journeyman,
 				PT.idStrings_Localized AS positionId, SL.English AS position
-				FROM Player_Listing PL INNER JOIN Player_Types PT ON PL.idPlayer_Types = PT.ID
-				INNER JOIN Strings_Localized SL ON PT.idStrings_Localized = SL.ID
-				WHERE PL.teamHash='".$this->teamId."'  AND (pl.journeyman = 0 OR (pl.journeyman = 1 AND bRetired = 0)) ORDER BY bRetired, iNumber";
-		$rosterInfo = $this->dbHandle->query($sql)->fetchAll();
-		
+				FROM #__bbla_Player_Listing PL INNER JOIN #__bbla_Player_Types PT ON PL.idPlayer_Types = PT.ID
+				INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
+				WHERE PL.teamHash='".$this->teamId."'  AND (PL.journeyman = 0 OR (PL.journeyman = 1 AND bRetired = 0)) ORDER BY bRetired, iNumber";
+		$this->joomlaDb->setQuery($sql);
+		$rosterInfo = $this->joomlaDb->loadAssocList();
 		
 		foreach ($rosterInfo as &$value) {
 			$value = $this->player->processPlayer($value);
@@ -106,15 +109,16 @@ class BbqlModelTeam extends JModel {
 		$leagueId = $leagueInfo['leagueId'];
 		// get match history from database
 		$sql = "SELECT *,
-			(SELECT strName FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayTeam,
-			(SELECT strName FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeTeam
-			FROM Calendar C
+			(SELECT strName FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayTeam,
+			(SELECT strName FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeTeam
+			FROM #__bbla_Calendar C
 			WHERE (teamHash_Away = '" . $this->teamId ."'". 
 			" OR teamHash_Home = '" . $this->teamId ."') " .
 			" AND leagueId = ". $leagueId.
 			" ORDER BY Championship_iDay";
-		$matchInfo = $this->dbHandle->query($sql)->fetchAll();
-		return $matchInfo;
+		$this->joomlaDb->setQuery($sql);
+		
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getTeamInfo() {
@@ -152,65 +156,67 @@ class BbqlModelTeam extends JModel {
 	}
 	
 	function getPlayerStats() {
-		// get roster information from database
-		$sql = "SELECT pl.strName, pl.iNumber, sp.* FROM Statistics_Season_Players sp INNER JOIN Player_Listing pl 
-				ON sp.playerHash = pl.playerHash WHERE pl.teamHash = '".$this->teamId."' AND (pl.journeyman = 0 OR (pl.journeyman = 1 AND bRetired = 0)) ORDER BY pl.iNumber";
-		$playerQry = $this->dbHandle->query($sql);
+		$sql = "SELECT pl.strName, pl.iNumber, sp.* 
+			FROM #__bbla_Statistics_Season_Players sp INNER JOIN #__bbla_Player_Listing pl 
+			ON sp.playerHash = pl.playerHash 
+			WHERE pl.teamHash = '".$this->teamId."' AND (pl.journeyman = 0 OR (pl.journeyman = 1 AND bRetired = 0)) ORDER BY pl.iNumber";
 		
-		// convert query to associative array
-		$playerStats = $playerQry->fetchAll();
-
-		return $playerStats;
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getTeamStats() {
-		// get roster information from database
-		$sql = "SELECT * FROM Statistics_Season_Teams WHERE teamHash = '".$this->teamId."'";
-		$teamQry = $this->dbHandle->query($sql);
+		$sql = "SELECT * FROM #__bbla_Statistics_Season_Teams WHERE teamHash = '".$this->teamId."'";
 		
-		// convert query to associative array
-		$teamStats = $teamQry->fetchAll();
-		//var_dump($playerStats);
-		return $teamStats;
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function determineFitPlayers() {
-		$sql = "SELECT COUNT(*) as fitPlayers FROM Player_Listing WHERE iMatchSuspended = 0 AND bRetired = 0 AND teamHash = '".$this->teamId."'";
-		$fit = $this->dbHandle->query($sql)->fetch();
+		$sql = "SELECT COUNT(*) as fitPlayers 
+			FROM #__bbla_Player_Listing 
+			WHERE iMatchSuspended = 0 AND bRetired = 0 AND teamHash = '".$this->teamId."'";
+		$this->joomlaDb->setQuery($sql);
+		$fitPlayers = $this->joomlaDb->loadResult();
 		
-		if ($fit['fitPlayers'] < 11) {
-			$sql = "UPDATE Team_Listing SET playersNeeded = 1 WHERE teamHash = '".$this->teamId."'";
+		if ($fitPlayers < 11) {
+			$sql = "UPDATE #__bbla_Team_Listing SET playersNeeded = 1 WHERE teamHash = '".$this->teamId."'";
 		} else {
-			$sql = "UPDATE Team_Listing SET playersNeeded = 0 WHERE teamHash = '".$this->teamId."'";
+			$sql = "UPDATE #__bbla_Team_Listing SET playersNeeded = 0 WHERE teamHash = '".$this->teamId."'";
 		}
 		
-		if ($fit['fitPlayers'] >= 12) {
-			$sql2 = "SELECT COUNT(*) as tooManyPlayers FROM Player_Listing WHERE journeyman = 1 AND bRetired = 0 AND teamHash = '".$this->teamId."'";
-			$qry = $this->dbHandle->query($sql2)->fetch();
-			if ($qry['tooManyPlayers'] > 0) {
-				$sql = "UPDATE Team_Listing SET playersNeeded = 2 WHERE teamHash = '".$this->teamId."'";
+		if ($fitPlayers >= 12) {
+			$sql2 = "SELECT COUNT(*) as tooManyPlayers FROM #__bbla_Player_Listing WHERE journeyman = 1 AND bRetired = 0 AND teamHash = '".$this->teamId."'";
+			$this->joomlaDb->setQuery($sql2);
+			$tooManyPlayers = $this->joomlaDb->loadResult();
+			
+			if ($tooManyPlayers > 0) {
+				$sql = "UPDATE #__bbla_Team_Listing SET playersNeeded = 2 WHERE teamHash = '".$this->teamId."'";
 			}
 		}
 		
-		$this->dbHandle->query($sql);
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
 		
-		return $fit['fitPlayers'];
+		return $fitPlayers;
 	}
 	
 	function determineJourneymenStatus() {
-		$sql = "SELECT PL.* FROM Player_Listing PL INNER JOIN Statistics_Season_Players S ON PL.playerHash = S.PlayerHash" .
+		$sql = "SELECT PL.* FROM #__bbla_Player_Listing PL INNER JOIN #__bbla_Statistics_Season_Players S ON PL.playerHash = S.PlayerHash" .
 			" WHERE iMatchPlayed > 0 AND journeyman = 1 AND bRetired = 0 AND teamHash = '".$this->teamId."'";
-		$journeymen = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$journeymen = $this->joomlaDb->loadAssocList();
 		
 		//if a journeymen has played a match, he'll need to be either hired 
 		//or fired, and we have to set the appropriate message.
 		if (count($journeymen) > 0) {
-			$sql = "UPDATE Team_Listing SET journeymenHireFire = 1";
+			$sql = "UPDATE #__bbla_Team_Listing SET journeymenHireFire = 1";
 		} else {
-			$sql = "UPDATE Team_Listing SET journeymenHireFire = 0";
+			$sql = "UPDATE #__bbla_Team_Listing SET journeymenHireFire = 0";
 		}
 		
-		$this->dbHandle->query($sql);
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
 	}
 	
 	function getPlayersForPurchase() {
@@ -218,10 +224,10 @@ class BbqlModelTeam extends JModel {
 		$sql = "SELECT PT.*, PT.Characteristics_fMovementAllowance MA,
 				PT.Characteristics_fStrength ST, PT.Characteristics_fAgility AG, PT.Characteristics_fArmourValue AV,
 				PT.idStrings_Localized AS positionId, SL.English AS position
-				FROM Player_Types PT INNER JOIN Strings_Localized SL ON PT.idStrings_Localized = SL.ID
+				FROM #__bbla_Player_Types PT INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
 				WHERE idRaces = ".$teamDetails['idRaces']." AND idPlayer_Name_Types <> ''";
-		
-		$playerPurchase = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$playerPurchase = $this->joomlaDb->loadAssocList();
 		
 		for ($i=0; $i<count($playerPurchase); $i++) {
 			$playerPurchase[$i]['MA'] = $this->utils->convertMA($playerPurchase[$i]['MA']);
@@ -618,7 +624,6 @@ class BbqlModelTeam extends JModel {
             $msg = array();
             $msg[] = "Team Value recalculated successfully";
             
-			$this->utils->convertSQLiteTablesToMySQL('Player_Skills');
             $this->utils->updateTeamValue($this->teamId);
             return array("result" => "success", "teamId" => $this->teamId, "msg" => $msg);
             

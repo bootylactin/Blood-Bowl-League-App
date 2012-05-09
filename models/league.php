@@ -22,7 +22,9 @@ class BbqlModelLeague extends JModel
 		
 		$this->leagueId = JRequest::getVar('leagueId');
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
+		
+		$this->joomlaDb = JFactory::getDBO();
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -34,18 +36,18 @@ class BbqlModelLeague extends JModel
 		$this->stringsLocalized = $this->utils->getStringsLocalized();
 		
 		//retrieve coach IDs
-		$sql = "SELECT coachId from Team_Listing WHERE leagueId = ".$this->leagueId;
-		$coachesQry = $this->dbHandle->query($sql);
+		$sql = "SELECT coachId from #__bbla_Team_Listing WHERE leagueId = ".$this->leagueId;
+		$this->joomlaDb->setQuery($sql);
 		
-		if ($coachesQry != false) {
-			$coaches = $coachesQry->fetchAll();
+		$coaches = $this->joomlaDb->loadResultArray();
 		
+		if ($coaches) {
 			//set times for coaches based on selected timezone and DST settings
 			$this->coachesTimeZones = array();
 			foreach ($coaches as $id) {
-				$user=& JUser::getInstance($id[0]);
+				$user=& JUser::getInstance($id);
 				$timezone = $user->getParam('timezone');
-				//var_dump($timezone);
+
 				$dst = $user->getParam('dst');
 				//are we currently in DST?  If so, and the user observes DST, add one hour
 				if (date('I') == 1 && $user->getParam('dst') == 1) {
@@ -54,7 +56,7 @@ class BbqlModelLeague extends JModel
 					$dst = 0;
 				}
 				
-				$this->coachesTimeZones[$id[0]] = time() + ($timezone + $dst)*3600 - date('Z');
+				$this->coachesTimeZones[$id] = time() + ($timezone + $dst)*3600 - date('Z');
 			}
 		}
 	}
@@ -66,70 +68,68 @@ class BbqlModelLeague extends JModel
 	//handle the receiving of the submitted file in this method
 	function createLeague() {
 		//insert team info
-		$sql = "INSERT INTO League (Name,Password,CommissionerId,StatusId,MultipleTeams,FullControl) " .
+		$sql = "INSERT INTO #__bbla_League (Name,Password,CommissionerId,StatusId,MultipleTeams,FullControl) " .
 				"VALUES(".
-					$this->dbHandle->quote($_POST['name']).",".
-					$this->dbHandle->quote($_POST['password']).",".
-					$this->dbHandle->quote($_POST['CommissionerId']).",".
+					$this->joomlaDb->quote($_POST['name']).",".
+					$this->joomlaDb->quote($_POST['password']).",".
+					$this->joomlaDb->quote($_POST['CommissionerId']).",".
 					"1,".
-					$this->dbHandle->quote($_POST['multipleTeams']).",".
-					$this->dbHandle->quote($_POST['fullControl']).
+					$this->joomlaDb->quote($_POST['multipleTeams']).",".
+					$this->joomlaDb->quote($_POST['fullControl']).
 				")";
 
-		$this->dbHandle->query(stripSlashes($sql));
+		
+		$this->joomlaDb->setQuery(stripSlashes($sql));
+		$test = $this->joomlaDb->query();
 
 		echo 'Your file upload was successful!'; // It worked.
 	}
 	
 	function getLeagueById() {
-		$sql = "SELECT L.*, status FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID"
-			. " WHERE L.ID = '" . $this->leagueId . "'";
-		$LeagueQry = $this->dbHandle->query($sql);
+		$sql = "SELECT L.*, Status 
+			FROM #__bbla_League L INNER JOIN #__bbla_League_Status LS ON L.StatusId = LS.ID
+			WHERE L.ID = '" . $this->leagueId . "'";
 		
-		$League = $LeagueQry->fetchAll();
-		
-		return $League;
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getTeams() {
 		// get team information from database for a particular league
-		$sql = "SELECT tl.*, sl.English as Race"
-			. " FROM Team_Listing tl INNER JOIN Races r ON tl.idRaces = r.ID"
-			. " INNER JOIN Strings_Localized sl ON r.idStrings_Localized = sl.ID"
-			. " WHERE leagueId = '" . $this->leagueId . "'";
-		$teamQry = $this->dbHandle->query($sql);
-		
-		$teamInfo = $teamQry->fetchAll();
-		
-		return $teamInfo;
+		$sql = "SELECT tl.*, sl.English as Race
+			FROM #__bbla_Team_Listing tl INNER JOIN #__bbla_Races r ON tl.idRaces = r.ID
+			INNER JOIN #__bbla_Strings_Localized sl ON r.idStrings_Localized = sl.ID
+			WHERE leagueId = '" . $this->leagueId . "'";
+
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
     
 	function getStandings() {
 		// get team information from database for a particular league
-		$sql = "SELECT sst.*, tl.*, sl.English as Race"
-			. " FROM Statistics_Season_Teams sst INNER JOIN Team_Listing tl ON sst.teamHash = tl.teamHash"
-			. " INNER JOIN Races r ON tl.idRaces = r.ID"
-			. " INNER JOIN Strings_Localized sl ON r.idStrings_Localized = sl.ID"
-			. " WHERE sst.leagueId = '" . $this->leagueId . "'"
-			. " ORDER BY iPoints DESC, iMatchPlayed, iWins DESC, touchdownDif DESC, Inflicted_iTouchdowns DESC";
-		$teamQry = $this->dbHandle->query($sql);
+		$sql = "SELECT sst.*, tl.*, sl.English as Race
+			FROM #__bbla_Statistics_Season_Teams sst INNER JOIN #__bbla_Team_Listing tl ON sst.teamHash = tl.teamHash
+			INNER JOIN #__bbla_Races r ON tl.idRaces = r.ID
+			INNER JOIN #__bbla_Strings_Localized sl ON r.idStrings_Localized = sl.ID
+			WHERE sst.leagueId = '" . $this->leagueId . "'
+			ORDER BY iPoints DESC, iMatchPlayed, iWins DESC, touchdownDif DESC, Inflicted_iTouchdowns DESC";
 		
-		$teamInfo = $teamQry->fetchAll();
-		
-		return $teamInfo;
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getSchedule() {
 		// get team information from database for a particular league
-		$sql = "SELECT C.*, (SELECT strName FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayTeam, " .
-			" (SELECT strName FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeTeam, " .
-			" (SELECT coachId FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayCoachId, " .
-			" (SELECT coachId FROM Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeCoachId " .
-			" FROM Calendar C WHERE leagueId = '" . $this->leagueId . "'" .
-			" ORDER BY Championship_iDay, bPlayed DESC, ID";
-		$schedule = $this->dbHandle->query($sql)->fetchAll();
+		$sql = "SELECT C.*, (SELECT strName FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayTeam,
+			(SELECT strName FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeTeam,
+			(SELECT coachId FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Away) AS AwayCoachId,
+			(SELECT coachId FROM #__bbla_Team_Listing TL WHERE TL.teamHash = C.teamHash_Home) AS HomeCoachId
+			FROM #__bbla_Calendar C WHERE leagueId = '" . $this->leagueId . "'
+			ORDER BY Championship_iDay, bPlayed DESC, ID";
 		
-		return $schedule;
+		$this->joomlaDb->setQuery($sql);
+		//$this->utils->do_dump($this->joomlaDb->loadAssocList());
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getLeagueLeaders() {
@@ -146,7 +146,7 @@ class BbqlModelLeague extends JModel
 			"ORDER BY Inflicted_iCasualties DESC, Inflicted_iDead DESC, Inflicted_iKO DESC, Inflicted_iStuns DESC Limit 10";
 		$returnStruct['mostCAS'] = $this->dbHandle->query($sqlCAS)->fetchAll();
 		
-		$sqlCOMP = $sqlBase." AND Inflicted_iPasses > 0 ORDER BY Inflicted_iPasses DESC Limit 10";
+		$sqlCOMP = $sqlBase." AND Inflicted_iPasses > 0 ORDER BY Inflicted_iPasses DESC, Inflicted_iMetersPassing DESC Limit 10";
 		$returnStruct['mostCOMP'] = $this->dbHandle->query($sqlCOMP)->fetchAll();
 		
 		$sqlINT = $sqlBase." AND Inflicted_iInterceptions > 0 ORDER BY Inflicted_iInterceptions DESC Limit 10";

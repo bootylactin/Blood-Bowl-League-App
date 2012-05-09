@@ -25,7 +25,7 @@ class BbqlModelPlayer extends JModel {
 		
 		$this->joomlaDb = JFactory::getDBO();
 		
-		$this->dbHandle = $bbqlDb;
+		//$this->dbHandle = $bbqlDb;
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -39,14 +39,28 @@ class BbqlModelPlayer extends JModel {
 	
 	function __destruct() {
 		unset($this->dbHandle);
+		unset($this->joomlaDb);
 	}
 	
 	function getTeamAndLeagueInfo() {
-		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, " .
-			" TL.teamHash as teamId, L.FullControl FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID" .
-			" INNER JOIN Player_Listing PL ON TL.teamHash = PL.teamHash" .
-			" WHERE playerHash = '".$this->playerId."'";
+		/*** SQLite query
+		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
+			TL.teamHash as teamId, L.FullControl 
+			FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID
+			INNER JOIN Player_Listing PL ON TL.teamHash = PL.teamHash
+			WHERE playerHash = '".$this->playerId."'";
+		
 		return $this->dbHandle->query($sql)->fetch();
+		***/
+		
+		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
+			TL.teamHash as teamId, L.FullControl 
+			FROM #__bbla_Team_Listing TL INNER JOIN #__bbla_League L ON TL.leagueId = L.ID
+			INNER JOIN #__bbla_Player_Listing PL ON TL.teamHash = PL.teamHash
+			WHERE playerHash = '".$this->playerId."'";
+
+		$this->joomlaDb->setQuery($sql);
+		return ($this->joomlaDb->loadAssoc());
 	}
 	
 	function getPlayerInfo() {
@@ -73,7 +87,7 @@ class BbqlModelPlayer extends JModel {
 			}
 		}
 		$playerDetails['coachId'] = $team['coachId'];
-		
+				
 		$returnStruct = array(
 			"playerDetails" => $playerDetails, 
 			"skillCategories" => $skillCategories,
@@ -128,27 +142,27 @@ class BbqlModelPlayer extends JModel {
 
 	
 	function getPlayerSkillsInjuries($playerHash, $playerType) {
+		$skills = array();
 		// default skills
-		$sql = "SELECT idSkill_Listing FROM Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
-		$defSkillsQry = $this->dbHandle->query($sql);
-			
+		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['default'] = $this->joomlaDb->loadAssocList();
+		
 		// acquired skills
-		$sql = "SELECT idSkill_Listing FROM Player_Skills WHERE playerHash = '" . $playerHash . "'";
-		$acqSkillsQry = $this->dbHandle->query($sql);
+		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Skills WHERE playerHash = '" . $playerHash . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['acquired'] = $this->joomlaDb->loadAssocList();
+		
 		// injuries
-		$sql = "SELECT idPlayer_Casualty_Types FROM Player_Casualties WHERE playerHash = '" . $playerHash . "'";
-		$injuryQry = $this->dbHandle->query($sql);
+		$sql = "SELECT idPlayer_Casualty_Types FROM #__bbla_Player_Casualties WHERE playerHash = '" . $playerHash . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['injuries'] = $this->joomlaDb->loadAssocList();
+		
 		// default attributes
 		$sql = "SELECT Characteristics_fMovementAllowance MA, Characteristics_fStrength ST,
-				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM Player_Types WHERE ID = '" . $playerType . "'";
-		$attributesQry = $this->dbHandle->query($sql);
-		
-		
-		$skills = array();
-		$skills['default'] = $defSkillsQry->fetchAll();
-		$skills['acquired'] = $acqSkillsQry->fetchAll();
-		$skills['injuries'] = $injuryQry->fetchAll();
-		$skills['attributes'] = $attributesQry->fetchAll();
+				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM #__bbla_Player_Types WHERE ID = '" . $playerType . "'";
+		$this->joomlaDb->setQuery($sql);
+		$skills['attributes'] = $this->joomlaDb->loadAssocList();
 		
 		return $skills;
 	}
@@ -157,44 +171,52 @@ class BbqlModelPlayer extends JModel {
 		$struct = array();
 		
 		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName
-			FROM Player_Types pt INNER JOIN Player_Type_Skill_Categories_Normal ptscn ON pt.ID = ptscn.idPlayer_Types 
-			INNER JOIN Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
-			INNER JOIN Skill_Listing sl ON sc.ID = sl.idSkill_Categories
-			INNER JOIN Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			FROM #__bbla_Player_Types pt INNER JOIN #__bbla_Player_Type_Skill_Categories_Normal ptscn ON pt.ID = ptscn.idPlayer_Types 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
+			INNER JOIN #__bbla_Skill_Listing sl ON sc.ID = sl.idSkill_Categories
+			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 			WHERE pt.ID = '".$playerType."'".
 			"ORDER BY sl.idSkill_Categories, English";
-		$struct['normal'] = $this->dbHandle->query($sql)->fetchAll();
+		//$struct['normal'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['normal'] = $this->joomlaDb->loadAssocList();
 		
 		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName
-			FROM Player_Types pt INNER JOIN Player_Type_Skill_Categories_Double ptscn ON pt.ID = ptscn.idPlayer_Types 
-			INNER JOIN Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
-			INNER JOIN Skill_Listing sl ON sc.ID = sl.idSkill_Categories
-			INNER JOIN Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			FROM #__bbla_Player_Types pt INNER JOIN #__bbla_Player_Type_Skill_Categories_Double ptscn ON pt.ID = ptscn.idPlayer_Types 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
+			INNER JOIN #__bbla_Skill_Listing sl ON sc.ID = sl.idSkill_Categories
+			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 			WHERE pt.ID = '".$playerType."'".
 			"ORDER BY sl.idSkill_Categories, English";
-		$struct['doubles'] = $this->dbHandle->query($sql)->fetchAll();
+		//$struct['doubles'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['doubles'] = $this->joomlaDb->loadAssocList();
 		
 		$sql = "SELECT 'Increase' as Category, sl.ID as skillId, English as skillName
-				FROM Skill_Listing sl INNER JOIN Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+				FROM #__bbla_Skill_Listing sl INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 				WHERE idSkill_Categories = ''";
-		$struct['attributes'] = $this->dbHandle->query($sql)->fetchAll();
+		//$struct['attributes'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['attributes'] = $this->joomlaDb->loadAssocList();
 		
 		return $struct;
 	}
 	
 	function getPlayerSkillCategories($playerType) {
-		$sql = "SELECT CONSTANT as Category	FROM Player_Type_Skill_Categories_Normal ptscn 
-			INNER JOIN Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
+		$sql = "SELECT CONSTANT as Category	FROM #__bbla_Player_Type_Skill_Categories_Normal ptscn 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
 			WHERE ptscn.idPlayer_Types = '".$playerType."'".
 			" ORDER BY Category ";
 		
-		$struct['normal'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['normal'] =	$this->joomlaDb->loadAssocList();
 		
-		$sql = "SELECT CONSTANT as Category	FROM Player_Type_Skill_Categories_Double ptscd 
-			INNER JOIN Skill_Categories sc ON ptscd.idSkill_Categories = sc.ID
+		$sql = "SELECT CONSTANT as Category	FROM #__bbla_Player_Type_Skill_Categories_Double ptscd 
+			INNER JOIN #__bbla_Skill_Categories sc ON ptscd.idSkill_Categories = sc.ID
 			WHERE ptscd.idPlayer_Types = '".$playerType."'".
 			"ORDER BY Category";
-		$struct['doubles'] = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$struct['doubles'] = $this->joomlaDb->loadAssocList();
 		
 		return $struct;
 	}
@@ -422,7 +444,8 @@ class BbqlModelPlayer extends JModel {
 	function getAvailablePlayerNumbers($teamId) {	
 		//retrieve player numbers
 		$sql = "SELECT iNumber FROM Player_Listing WHERE teamHash = '".$teamId."' AND bRetired <> 1 ORDER BY iNumber";
-		$numbers = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$numbers = $this->joomlaDb->loadAssocList();
 		
 		$availableNumbers = array();
 		$numberCheck = 1;  //player numbers start at 1

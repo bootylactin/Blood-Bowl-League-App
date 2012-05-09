@@ -20,12 +20,12 @@ class BbqlModelBbql extends JModel
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
+		global $systemPathToComponent, $httpPathToComponent;
 		$this->systemPathToComponent = $systemPathToComponent;
 		
 		$this->leagueId = JRequest::getVar('leagueId');
 		
-		$this->dbHandle = $bbqlDb;
+		$this->joomlaDb = JFactory::getDBO();
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
@@ -36,49 +36,40 @@ class BbqlModelBbql extends JModel
 	}
 	
 	function __destruct() {
-		unset($this->dbHandle);
+		unset($this->joomlaDb);
 	}
 	
 	function getMyLeagues() {
 		$joomlaUser =& JFactory::getUser();
+		$sql = "
+			SELECT leagueId FROM #__bbla_Team_Listing 
+			WHERE coachId = '" . $joomlaUser->id . "' 
+			UNION 
+			SELECT id FROM #__bbla_League 
+			WHERE CommissionerId = '" . $joomlaUser->id . "'";
 		
-//		$sql = "SELECT DISTINCT L.*, status,
-//			(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams
-//			FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID
-//
-//			 WHERE CommissionerId = '" . $joomlaUser->id . "'";
+		$this->joomlaDb->setQuery($sql);
+		$leagueIds = implode(",", $this->joomlaDb->loadResultArray());
+		
+		$sql = "SELECT DISTINCT L.*, Status,
+			(SELECT count(teamHash) FROM #__bbla_Team_Listing WHERE leagueId = L.ID) AS numberOfTeams
+			FROM #__bbla_League L INNER JOIN #__bbla_League_Status LS ON L.StatusId = LS.ID
+			WHERE L.id IN (".$leagueIds.")";
 
-
-		$sql = "SELECT DISTINCT L.*, status,
-			(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams
-			FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID
-			WHERE L.id IN (
-
-			SELECT leagueId FROM team_listing WHERE coachId = '" . $joomlaUser->id . "' UNION SELECT id FROM league WHERE CommissionerId = '" . $joomlaUser->id . "'
-
-			)";
-		//$sql = "SELECT L.* FROM League L WHERE CommissionerId = '" . $joomlaUser->id . "'";
-
-		$LeagueQry = $this->dbHandle->query($sql);
-		$LeagueList = $LeagueQry->fetchAll();
-
-		//$LeagueList = array();
-		return $LeagueList; 
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getOtherLeagues($excludeList, $filterLetter) {
 		$joomlaUser =& JFactory::getUser();
-		
-		$sql = "SELECT DISTINCT L.*, status,"
-			. "(SELECT count(teamHash) FROM Team_Listing WHERE leagueId = L.ID) AS numberOfTeams "
-			. " FROM League L INNER JOIN League_Status LS ON L.StatusId = LS.ID"
+
+		$sql = "SELECT DISTINCT L.*, Status,"
+			. "(SELECT count(teamHash) FROM #__bbla_Team_Listing WHERE leagueId = L.ID) AS numberOfTeams "
+			. " FROM #__bbla_League L INNER JOIN #__bbla_League_Status LS ON L.StatusId = LS.ID"
 			. " WHERE L.ID NOT IN (" . $excludeList . ") AND L.name LIKE '$filterLetter%'";
 		
-		$LeagueQry = $this->dbHandle->query($sql);
-		
-		$LeagueList = $LeagueQry->fetchAll();
-		
-		return $LeagueList;
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList();
 	}
 	
 	function getLeagues($filterLetter = "") {

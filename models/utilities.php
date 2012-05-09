@@ -207,7 +207,7 @@ class BbqlModelUtilities extends JModel
 		$starttime = $mtime; 
 		
 		set_time_limit(0);
-		
+
 		$tableArray = array('Calendar','Coach','Equipment_Listing','Inducement_Types',
 			'Inducements','League','League_Status','Player_Casualties','Player_Casualty_Types',
 			'Player_Listing','Player_Skills','Player_Type_Skill_Categories_Double',
@@ -216,28 +216,20 @@ class BbqlModelUtilities extends JModel
 			'Statistics_Season_Players','Statistics_Season_Teams','Statistics_Teams',
 			'Strings_Localized','Team_Listing');
 		
-		//$tableArray = array('Inducement_Types','Inducements','League_Status','Player_Casualty_Types');
+		//$tableArray = array('Equipment_Listing','Races');
 
-		//$tableToConvert = "Player_Types";
-		
-		
 		foreach($tableArray AS $tableToConvert) {
 			$startRow = 0;
-			$rowIncrement = 500;
+			$rowIncrement = 300;
 			$count = 0;
-			
 			
 			$recordCount = $bbqlDb->query("SELECT count(1) FROM ".$tableToConvert)->fetch();
 			$recordCount = $recordCount[0];
 
-			//$recordCount = 10000;
-
-			//echo $recordCount; die();
-
 			for ($startRow; $startRow < $recordCount; $startRow += $rowIncrement) {
 
 				$sql = "SELECT * FROM ".$tableToConvert." LIMIT ".$startRow.", ".$rowIncrement;
-
+				
 				$result = $bbqlDb->query($sql)->fetchAll();
 
 				$keys = array_keys($result[0]);
@@ -262,14 +254,15 @@ class BbqlModelUtilities extends JModel
 					//Dynamically construct insert statement
 					$insert = "INSERT INTO #__bbla_".$tableToConvert." (".$columnStr.") VALUES (";
 					foreach($tableColumns as $value) {
-						$insert = $insert.$joomlaDb->quote($dbRow[$value]) . ", ";
+						if ($dbRow[$value] != NULL)
+							$insert = $insert.$joomlaDb->quote($dbRow[$value]) . ", ";
+						else
+							$insert = $insert."NULL, ";
 					}
 					$insert = substr($insert, 0, -2); //remove trailing comma and space
 					$insert = $insert.")";
-
-					//print_r($insert.";"); die();
-
-
+					
+					
 
 					//run the insert statement
 					$joomlaDb->setQuery($insert);
@@ -279,20 +272,20 @@ class BbqlModelUtilities extends JModel
 					} 
 
 				}
-				print_r("<br/>cycle<br/>");
+				// echo($tableToConvert.": ".$count." records processed<br/>");
 			}
-			
-			echo "<b>".$tableToConvert." conversion complete.</b><br/><br/>";
+			echo "<b>".$tableToConvert." conversion complete.</b> ".$count." records processed<br/><br/>";
 		}
 
-		print_r("Finished ".$count." records.");
+		//echo("Finished ".$count." records.<br/>");
 
 		$mtime = microtime(); 
 		$mtime = explode(" ",$mtime); 
 		$mtime = $mtime[1] + $mtime[0]; 
 		$endtime = $mtime; 
 		$totaltime = ($endtime - $starttime); 
-		echo "This page was created in ".$totaltime." seconds"; 
+		$minutetime = $totaltime/60;
+		echo "This page was created in ".$minutetime." minutes";
 		die();
 	}
 	

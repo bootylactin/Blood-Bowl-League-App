@@ -21,7 +21,7 @@ class BbqlModelUpload extends JModel
 		$this->httpPathToComponent = $httpPathToComponent;
 		$this->leagueId = JRequest::getVar('leagueId');
 		
-		$this->bbqlHandle = $bbqlDb;
+		//$this->bbqlHandle = $bbqlDb;
 		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
