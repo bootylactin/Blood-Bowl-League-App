@@ -218,25 +218,20 @@ class BbqlModelUtilities extends JModel
 		
 		//$tableArray = array('Inducement_Types','Inducements','League_Status','Player_Casualty_Types');
 		
-		//$tableArray = array('Team_Listing');
+		//$tableArray = array('Calendar');
 
 		foreach($tableArray AS $tableToConvert) {
 			$startRow = 0;
-			$rowIncrement = 500;
+			$rowIncrement = 300;
 			$count = 0;
-			
 			
 			$recordCount = $bbqlDb->query("SELECT count(1) FROM ".$tableToConvert)->fetch();
 			$recordCount = $recordCount[0];
 
-			//$recordCount = 10000;
-
-			//echo $recordCount; die();
-
 			for ($startRow; $startRow < $recordCount; $startRow += $rowIncrement) {
 
 				$sql = "SELECT * FROM ".$tableToConvert." LIMIT ".$startRow.", ".$rowIncrement;
-
+				
 				$result = $bbqlDb->query($sql)->fetchAll();
 
 				$keys = array_keys($result[0]);
@@ -261,10 +256,15 @@ class BbqlModelUtilities extends JModel
 					//Dynamically construct insert statement
 					$insert = "INSERT INTO #__bbla_".$tableToConvert." (".$columnStr.") VALUES (";
 					foreach($tableColumns as $value) {
-						$insert = $insert.$joomlaDb->quote($dbRow[$value]) . ", ";
+						if ($dbRow[$value] != NULL)
+							$insert = $insert.$joomlaDb->quote($dbRow[$value]) . ", ";
+						else
+							$insert = $insert."NULL, ";
 					}
 					$insert = substr($insert, 0, -2); //remove trailing comma and space
 					$insert = $insert.")";
+					
+					
 
 					//run the insert statement
 					$joomlaDb->setQuery($insert);

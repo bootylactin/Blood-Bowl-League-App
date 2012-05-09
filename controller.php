@@ -339,7 +339,7 @@ class BbqlController extends JController
 		}
 	}
         
-        function recalculateTeamValue() {
+	function recalculateTeamValue() {
 		$model = &$this->getModel('team');
 		$return = $model->recalculateTeamValue();
 		
