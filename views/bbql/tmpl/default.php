@@ -6,8 +6,6 @@ include JRoute::_('components/com_bbql/includes/navigation.php');
 $user =& JFactory::getUser();
 ?>
 
-POOP!
-
 <h4>My Leagues</h4>
 <table  class="leagueTable" cellspacing="0">
 <?php if (!empty($this->leagues)) { ?>
