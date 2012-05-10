@@ -535,14 +535,14 @@ class BbqlModelTeam extends JModel {
 						$sql = "SELECT PT.*, SL.English AS position FROM #__bbla_Player_Types PT 
 							INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
 							WHERE PT.ID = ".substr($formFields, 13);
-						//$qry = $this->dbHandle->query($sql)->fetch();
+
 						$this->joomlaDb->setQuery($sql);
 						$qry = $this->joomlaDb->loadAssoc();
 						
 						$sql = "SELECT ID, idEquipment_Types FROM #__bbla_Equipment_Listing
 							WHERE idPlayer_Levels = 1 AND idPlayer_Types = ".substr($formFields, 13).
 							" ORDER BY idEquipment_Types";
-						//$equipment = $this->dbHandle->query($sql)->fetchAll();
+
 						$this->joomlaDb->setQuery($sql);
 						$equipment = $this->joomlaDb->loadAssocList();
 						
@@ -557,14 +557,14 @@ class BbqlModelTeam extends JModel {
 			}
 			//get highest player ID
 			$sql = "SELECT playerId FROM #__bbla_Player_Listing WHERE teamHash = '".$this->teamId."' ORDER BY playerId DESC LIMIT 1";
-			//$playerId = $this->dbHandle->query($sql)->fetch();
+
 			$this->joomlaDb->setQuery($sql);
 			$playerId =  $this->joomlaDb->loadResult();
 			$nextPlayerId = $playerId + 1;
 			
 			//retrieve player numbers
 			$sql = "SELECT iNumber FROM #__bbla_Player_Listing WHERE teamHash = '".$this->teamId."' AND bRetired <> 1 ORDER BY iNumber";
-			//$numbers = $this->dbHandle->query($sql)->fetchAll();
+
 			$this->joomlaDb->setQuery($sql);
 			$numbers = $this->joomlaDb->loadAssocList();
 			
@@ -618,19 +618,18 @@ class BbqlModelTeam extends JModel {
 					}
 					$sql = $sql."1)";
 					
-					//$this->dbHandle->query($sql);
 					$this->joomlaDb->setQuery($sql);
 					$this->joomlaDb->query();
 					
 					//add loner skill for player
 					$sql = "INSERT INTO #__bbla_Player_Skills(idSkill_Listing,playerHash) VALUES(44,'".$pa['playerHash']."')";
-					//$this->dbHandle->query($sql);
+
 					$this->joomlaDb->setQuery($sql);
 					$this->joomlaDb->query();
 					
 					$sql = "INSERT INTO #__bbla_Statistics_Season_Players (iSeason,iMatchPlayed,iMVP,Inflicted_iPasses,Inflicted_iCatches,Inflicted_iInterceptions,Inflicted_iTouchdowns,Inflicted_iCasualties,Inflicted_iTackles,Inflicted_iKO,Inflicted_iStuns,Inflicted_iInjuries,Inflicted_iDead,Inflicted_iMetersRunning,Inflicted_iMetersPassing,Sustained_iInterceptions,Sustained_iCasualties,Sustained_iTackles,Sustained_iKO,Sustained_iStuns,Sustained_iInjuries,Sustained_iDead,playerHash)" .
 						" VALUES (1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'".$pa['playerHash']."')";
-					//$this->dbHandle->query($sql);
+
 					$this->joomlaDb->setQuery($sql);
 					$this->joomlaDb->query();
 					

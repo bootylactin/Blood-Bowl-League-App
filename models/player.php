@@ -231,16 +231,16 @@ class BbqlModelPlayer extends JModel {
 		$MA = $playerDetails['MA'];
 		$AV = $playerDetails['AV'];
 		
-		echo $ST." ".$AG." ".$MA." ".$AV."<br/>";
-		
 		//determine what type of skill (normal/double/attribute) based on playerType so that
 		//we know how much to add to the player value
 		//grab skill category
-		$sql = "SELECT idSkill_Categories cat FROM Skill_Listing WHERE ID = ".$_POST['skillId'];
-		$skillCat = $this->dbHandle->query($sql)->fetch();
+		$sql = "SELECT idSkill_Categories cat FROM #__bbla_Skill_Listing WHERE ID = ".$_POST['skillId'];
+
+		$this->joomlaDb->setQuery($sql);
+		$skillCat = $this->joomlaDb->loadResult();
 		
 		//if category is blank, we're dealing with an attribute increase
-		if ($skillCat['cat'] == "") {
+		if ($skillCat == "") {
 			switch ($_POST['skillId']) {
 				case 2: //ST
 					$playerValueIncrease = 50;
@@ -261,18 +261,26 @@ class BbqlModelPlayer extends JModel {
 
 		} else {
 			//now check the Normal Table for playerType/Skill
-			$sql = "SELECT * FROM Player_Type_Skill_Categories_Normal" .
+			$sql = "SELECT * FROM #__bbla_Player_Type_Skill_Categories_Normal" .
 				" WHERE idPlayer_Types =".$_POST['playerType'].
-				" AND idSkill_Categories =".$skillCat['cat'];
-			$normal = $this->dbHandle->query($sql)->fetch();
+				" AND idSkill_Categories =".$skillCat;
+
+			$this->joomlaDb->setQuery($sql);
+			$normal = $this->joomlaDb->loadAssocList();
+			
+			$this->utils->do_dump($normal, '$normal');
+			
 			if ($normal != false) {
 				$playerValueIncrease = 20;
 			} else {
 				//now check the Double Table for playerType/Skill
-				$sql = "SELECT * FROM Player_Type_Skill_Categories_Double" .
+				$sql = "SELECT * FROM #__bbla_Player_Type_Skill_Categories_Double" .
 					" WHERE idPlayer_Types =".$_POST['playerType'].
-					" AND idSkill_Categories =".$skillCat['cat'];
-				$double = $this->dbHandle->query($sql)->fetch();
+					" AND idSkill_Categories =".$skillCat;
+				//$double = $this->dbHandle->query($sql)->fetch();
+				$this->joomlaDb->setQuery($sql);
+				$double = $this->joomlaDb->loadAssocList();
+				
 				if ($double != false) {
 					$playerValueIncrease = 30;
 				} else {
@@ -286,14 +294,13 @@ class BbqlModelPlayer extends JModel {
 		$AG = $this->utils->setAGpercent($AG);
 		$MA = $this->utils->setMApercent($MA);
 		$AV = $this->utils->setAVpercent($AV);
-		
-		echo $ST." ".$AG." ".$MA." ".$AV."<br/>";
 						
 		//add skill
-		$sql = "INSERT INTO Player_Skills (idSkill_Listing,playerHash) VALUES(" .
+		$sql = "INSERT INTO #__bbla_Player_Skills (idSkill_Listing,playerHash) VALUES(" .
 			$_POST['skillId'].",'".$this->playerId."')";
-		echo $sql."<br/>";
-		$this->dbHandle->query($sql);
+		
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
 		
 		//check if skill dice need to be re-rolled for a multi-level gain
 		$reRoll = false;
@@ -310,7 +317,7 @@ class BbqlModelPlayer extends JModel {
 		}
 		
 		//update player record
-		$sql = "UPDATE Player_Listing SET" .
+		$sql = "UPDATE #__bbla_Player_Listing SET" .
 			" Characteristics_fMovementAllowance = ".$MA."," .
 			" Characteristics_fStrength = ".$ST."," .
 			" Characteristics_fAgility = ".$AG."," .
@@ -322,21 +329,23 @@ class BbqlModelPlayer extends JModel {
 			" LevelUp_iRollResult2 = ".$LevelUp_iRollResult2."," .
 			" LevelUp_bDouble = ".$LevelUp_bDouble.
 			" WHERE playerHash = '".$this->playerId."'";
-		echo $sql."<br/>";
-		$this->dbHandle->query($sql);
 		
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
+
 		//update team value
 		$this->utils->updateTeamValue($playerDetails['teamHash']);
 	}
 	
 	function changePlayerAttributes() {
-		$sql = "UPDATE Player_Listing SET " .
-			"strName = ".$this->dbHandle->quote($_POST['strName']).",".
+		$sql = "UPDATE #__bbla_Player_Listing SET " .
+			"strName = ".$this->joomlaDb->quote($_POST['strName']).",".
 			"iNumber = '".$_POST['iNumber']."',".
 			"iSkinTextureVariant = '".$_POST['iSkinTextureVariant']."'" .
 			" WHERE playerHash = '".$_POST['playerId']."'";
 
-		$this->dbHandle->query(stripSlashes($sql));
+		$this->joomlaDb->setQuery($sql);
+		$this->joomlaDb->query();
 	}
 	
 	function firePlayer() {
@@ -450,7 +459,7 @@ class BbqlModelPlayer extends JModel {
 	
 	function getAvailablePlayerNumbers($teamId) {	
 		//retrieve player numbers
-		$sql = "SELECT iNumber FROM Player_Listing WHERE teamHash = '".$teamId."' AND bRetired <> 1 ORDER BY iNumber";
+		$sql = "SELECT iNumber FROM #__bbla_Player_Listing WHERE teamHash = '".$teamId."' AND bRetired <> 1 ORDER BY iNumber";
 		$this->joomlaDb->setQuery($sql);
 		$numbers = $this->joomlaDb->loadAssocList();
 		
