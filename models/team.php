@@ -249,6 +249,7 @@ class BbqlModelTeam extends JModel {
 			$errorMsg = array();
 			$cost = 0;
 			$cheerSql = "";
+			$assistantSql = "";
 			$apothSql = "";
 			$rerollSql = "";
 			//cheerleaders 
@@ -279,7 +280,7 @@ class BbqlModelTeam extends JModel {
 					$fireMsg[] = "1 assistant coach was fired.";
 					break;
 				default:
-					$cheerSql = "UPDATE #__bbla_Team_Listing SET iAssistantCoaches = iAssistantCoaches + ".$_POST['assistantCoaches']." WHERE teamHash = '".$this->teamId."'";
+					$assistantSql = "UPDATE #__bbla_Team_Listing SET iAssistantCoaches = iAssistantCoaches + ".$_POST['assistantCoaches']." WHERE teamHash = '".$this->teamId."'";
 					$hireMsg[] = $_POST['assistantCoaches']." assistant coach(es) hired.";
 					$cost = $cost + ($_POST['assistantCoaches']*10000);
 					break;
@@ -331,6 +332,8 @@ class BbqlModelTeam extends JModel {
 				} else {
 					$this->joomlaDb->setQuery($cheerSql);
 					$this->joomlaDb->query();
+					$this->joomlaDb->setQuery($assistantSql);
+					$this->joomlaDb->query();
 					$this->joomlaDb->setQuery($apothSql);
 					$this->joomlaDb->query();
 					$this->joomlaDb->setQuery($rerollSql);
@@ -375,36 +378,16 @@ class BbqlModelTeam extends JModel {
 				if (strpos($formFields, 'playerTypeId_') !== false) {
 					//if it's not empty, look up the player type and price
 					if ($_POST[$formFields] != "") {
-						//$this->player->getPlayerTypeDetails(substr($formFields, 13));
-						
-						$sql = "SELECT PT.*, SL.English AS position 
-							FROM #__bbla_Player_Types PT 
-							INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
-							WHERE PT.ID = ".substr($formFields, 13);
-						$this->joomlaDb->setQuery($sql);
-						$qry = $this->joomlaDb->loadAssoc();
-						//$qry = $this->dbHandle->query($sql)->fetch();
-						
-						$sql = "SELECT ID, idEquipment_Types FROM #__bbla_Equipment_Listing
-							WHERE idPlayer_Levels = 1 AND idPlayer_Types = ".substr($formFields, 13).
-							" ORDER BY idEquipment_Types";
-						$this->joomlaDb->setQuery($sql);
-						$equipment = $this->joomlaDb->loadAssocList();
-						//$equipment = $this->dbHandle->query($sql)->fetchAll();
-						
-						$positionCosts[$qry['position']] = array();
-						$positionCosts[$qry['position']]['cost'] = $qry['iPrice'];
-						$positionCosts[$qry['position']]['quantity'] = $_POST[$formFields];	
-						$positionCosts[$qry['position']]['playerAttributes'] = $qry;
-						$positionCosts[$qry['position']]['playerAttributes']['equipment'] = $equipment;
+						$playerDetails = $this->player->getPlayerTypeDetails(substr($formFields, 13));
+						$playerDetails['quantity'] = $_POST[$formFields];
+						$positionCosts[] = $playerDetails;
 						
 						$numPlayersPurchased = $numPlayersPurchased + $_POST[$formFields];
-						$cost = $cost + $qry['iPrice']*$_POST[$formFields];
-						$hireMsg[] = $qry['position'].": ".$_POST[$formFields]." hired.";
+						$cost = $cost + $playerDetails['playerAttributes']['iPrice']*$_POST[$formFields];
+						$hireMsg[] = $playerDetails['playerAttributes']['position'].": ".$_POST[$formFields]." hired.";
 					}
 				}
 			}
-			
 			if ($cost > 0) {
 				//if they tried to buy too much
 				if ($cost > $gold) {
@@ -417,14 +400,12 @@ class BbqlModelTeam extends JModel {
 					$sql = "SELECT playerId FROM #__bbla_Player_Listing WHERE teamHash = '".$this->teamId."' ORDER BY playerId DESC LIMIT 1";
 					$this->joomlaDb->setQuery($sql);
 					$playerId = $this->joomlaDb->loadResult();
-					//$playerId = $this->dbHandle->query($sql)->fetch();
 					$nextPlayerId = $playerId + 1;
 					
 					//retrieve player numbers
 					$sql = "SELECT iNumber FROM #__bbla_Player_Listing WHERE teamHash = '".$this->teamId."' AND bRetired <> 1 ORDER BY iNumber";
 					$this->joomlaDb->setQuery($sql);
 					$numbers = $this->joomlaDb->loadAssocList();
-					//$numbers = $this->dbHandle->query($sql)->fetchAll();
 
 					//if attempted hirings bring roster over 16, return with error
 					if (count($numbers) + $numPlayersPurchased > 16) {
@@ -439,9 +420,12 @@ class BbqlModelTeam extends JModel {
 					$numberCheck = 1;  //player numbers start at 1
 					$iterator = 0;  //arrays start at 0
 					//loop through purchases
-					foreach($positionCosts as $position => $row) {
+					$this->utils->do_dump($positionCosts);
+					foreach($positionCosts as $row) {
+						$this->utils->do_dump($row['quantity']);
 						for ($i=1; $i<=$row['quantity']; $i++) {
 							//find an available player number
+							$this->utils->do_dump($numbers);
 							while ($numberCheck == $numbers[$iterator]['iNumber']) {
 								$numberCheck++;
 								$iterator++;
@@ -450,7 +434,7 @@ class BbqlModelTeam extends JModel {
 							$pa = $row['playerAttributes'];
 							
 							//set specific values for insertion, all others will = 0
-							$pa['strName'] = $position." #".$numberCheck;
+							$pa['strName'] = $row['position']." #".$numberCheck;
 							$pa['idPlayer_Types'] = $pa['ID'];
 							$pa['playerHash'] = $this->teamId."-".$nextPlayerId;
 							$pa['teamHash'] = $this->teamId;
@@ -481,15 +465,12 @@ class BbqlModelTeam extends JModel {
 								}
 							}
 							$sql = substr($sql, 0, -1).")";
-							
+							echo($sql);
 							$this->joomlaDb->setQuery($sql);
 							$this->joomlaDb->query();
 							
-							//$this->dbHandle->query($sql);
-							
 							$sql = "INSERT INTO #__bbla_Statistics_Season_Players (iSeason,iMatchPlayed,iMVP,Inflicted_iPasses,Inflicted_iCatches,Inflicted_iInterceptions,Inflicted_iTouchdowns,Inflicted_iCasualties,Inflicted_iTackles,Inflicted_iKO,Inflicted_iStuns,Inflicted_iInjuries,Inflicted_iDead,Inflicted_iMetersRunning,Inflicted_iMetersPassing,Sustained_iInterceptions,Sustained_iCasualties,Sustained_iTackles,Sustained_iKO,Sustained_iStuns,Sustained_iInjuries,Sustained_iDead,playerHash)" .
 								" VALUES (1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'".$pa['playerHash']."')";
-							//$this->dbHandle->query($sql);
 							$this->joomlaDb->setQuery($sql);
 							$this->joomlaDb->query();
 							
@@ -499,17 +480,15 @@ class BbqlModelTeam extends JModel {
 					}
 					//deduct gold from treasury
 					$sql="UPDATE #__bbla_Team_Listing SET iCash = iCash - ".$cost." WHERE teamHash = '".$this->teamId."'";
-					//$this->dbHandle->query($sql);
 					$this->joomlaDb->setQuery($sql);
 					$this->joomlaDb->query();
-					
 					
 					$hireMsg[] = "<br/>";
 					$hireMsg[] = number_format($cost)." gold was deducted from your treasury.";
 					$msg = $hireMsg;
 				}
 			}
-		}
+		} 
 		//finally, update team values based on purchases
 		$this->utils->updateTeamValue($this->teamId);
 		return array("result" => "success", "teamId" => $this->teamId, "msg" => $msg);

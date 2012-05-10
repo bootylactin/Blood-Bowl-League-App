@@ -439,20 +439,24 @@ class BbqlModelPlayer extends JModel {
 	
 	function getPlayerTypeDetails($playerType) {
 		$positionCosts = array();
-		$sql = "SELECT PT.*, SL.English AS position FROM Player_Types PT 
-			INNER JOIN Strings_Localized SL ON PT.idStrings_Localized = SL.ID
+		$sql = "SELECT PT.*, SL.English AS position FROM #__bbla_Player_Types PT 
+			INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
 			WHERE PT.ID = ".$playerType;
-		$qry = $this->dbHandle->query($sql)->fetch();
+		//$qry = $this->dbHandle->query($sql)->fetch();
+		$this->joomlaDb->setQuery($sql);
+		$qry = $this->joomlaDb->loadAssoc();
 		
-		$sql = "SELECT ID, idEquipment_Types FROM Equipment_Listing
+		$sql = "SELECT ID, idEquipment_Types FROM #__bbla_Equipment_Listing
 			WHERE idPlayer_Levels = 1 AND idPlayer_Types = ".$playerType.
 			" ORDER BY idEquipment_Types";
-		$equipment = $this->dbHandle->query($sql)->fetchAll();
+		//$equipment = $this->dbHandle->query($sql)->fetchAll();
+		$this->joomlaDb->setQuery($sql);
+		$equipment = $this->joomlaDb->loadAssocList();
 		
-		$positionCosts[$qry['position']] = array();
-		$positionCosts[$qry['position']]['cost'] = $qry['iPrice'];
-		$positionCosts[$qry['position']]['playerAttributes'] = $qry;
-		$positionCosts[$qry['position']]['playerAttributes']['equipment'] = $equipment;
+		$positionCosts['position'] = $qry['position'];
+		$positionCosts['cost'] = $qry['iPrice'];
+		$positionCosts['playerAttributes'] = $qry;
+		$positionCosts['playerAttributes']['equipment'] = $equipment;
 		
 		return $positionCosts;
 	}
