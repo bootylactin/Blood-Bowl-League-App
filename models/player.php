@@ -25,8 +25,6 @@ class BbqlModelPlayer extends JModel {
 		
 		$this->joomlaDb = JFactory::getDBO();
 		
-		//$this->dbHandle = $bbqlDb;
-		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
 	
@@ -38,21 +36,10 @@ class BbqlModelPlayer extends JModel {
 	}
 	
 	function __destruct() {
-		unset($this->dbHandle);
 		unset($this->joomlaDb);
 	}
 	
 	function getTeamAndLeagueInfo() {
-		/*** SQLite query
-		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
-			TL.teamHash as teamId, L.FullControl 
-			FROM Team_Listing TL INNER JOIN League L ON TL.leagueId = L.ID
-			INNER JOIN Player_Listing PL ON TL.teamHash = PL.teamHash
-			WHERE playerHash = '".$this->playerId."'";
-		
-		return $this->dbHandle->query($sql)->fetch();
-		***/
-		
 		$sql = "SELECT TL.leagueId, L.name as leagueName, TL.strName as teamName, TL.coachId, 
 			TL.teamHash as teamId, L.FullControl 
 			FROM #__bbla_Team_Listing TL INNER JOIN #__bbla_League L ON TL.leagueId = L.ID
@@ -177,7 +164,7 @@ class BbqlModelPlayer extends JModel {
 			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 			WHERE pt.ID = '".$playerType."'".
 			"ORDER BY sl.idSkill_Categories, English";
-		//$struct['normal'] = $this->dbHandle->query($sql)->fetchAll();
+
 		$this->joomlaDb->setQuery($sql);
 		$struct['normal'] = $this->joomlaDb->loadAssocList();
 		
@@ -188,14 +175,14 @@ class BbqlModelPlayer extends JModel {
 			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 			WHERE pt.ID = '".$playerType."'".
 			"ORDER BY sl.idSkill_Categories, English";
-		//$struct['doubles'] = $this->dbHandle->query($sql)->fetchAll();
+
 		$this->joomlaDb->setQuery($sql);
 		$struct['doubles'] = $this->joomlaDb->loadAssocList();
 		
 		$sql = "SELECT 'Increase' as Category, sl.ID as skillId, English as skillName
 				FROM #__bbla_Skill_Listing sl INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
 				WHERE idSkill_Categories = ''";
-		//$struct['attributes'] = $this->dbHandle->query($sql)->fetchAll();
+
 		$this->joomlaDb->setQuery($sql);
 		$struct['attributes'] = $this->joomlaDb->loadAssocList();
 		
@@ -277,7 +264,7 @@ class BbqlModelPlayer extends JModel {
 				$sql = "SELECT * FROM #__bbla_Player_Type_Skill_Categories_Double" .
 					" WHERE idPlayer_Types =".$_POST['playerType'].
 					" AND idSkill_Categories =".$skillCat;
-				//$double = $this->dbHandle->query($sql)->fetch();
+
 				$this->joomlaDb->setQuery($sql);
 				$double = $this->joomlaDb->loadAssocList();
 				
@@ -361,7 +348,6 @@ class BbqlModelPlayer extends JModel {
 			$sql = "UPDATE #__bbla_Player_Listing SET bRetired = 1 WHERE playerHash = '".$this->playerId."'";
 			$this->joomlaDb->setQuery($sql);
 			$this->joomlaDb->query();
-			//$this->dbHandle->query($sql);
 			
 			//run Journeyman routine to see if journeymenHireFire flag needs to be reset
 			$this->processJourneymen($teamId);
@@ -373,6 +359,7 @@ class BbqlModelPlayer extends JModel {
 		}
 	}
 	
+	//TODO: convert to joomlaDb
 	function hireJourneyman() {
 		$teamInfo = $this->getTeamAndLeagueInfo();
 		$teamId = $teamInfo['teamId'];
@@ -426,14 +413,12 @@ class BbqlModelPlayer extends JModel {
 		$sql = "SELECT count(*) as journeyman FROM #__bbla_Player_Listing WHERE teamHash = '".$teamId."' AND journeyman = 1 AND bRetired = 0";
 		$this->joomlaDb->setQuery($sql);
 		$journeyman = $this->joomlaDb->loadResult();
-		//$qry = $this->dbHandle->query($sql)->fetch();
 
 		//if no Journeyman are found, reset the postMatch flag
 		if ($journeyman == 0) {
 			$sql = "UPDATE Team_Listing set journeymenHireFire = 0 WHERE teamHash = '".$teamId."'";
 			$this->joomlaDb->setQuery($sql);
 			$this->joomlaDb->query();
-			//$this->dbHandle->query($sql);
 		}
 	}
 	
@@ -442,14 +427,12 @@ class BbqlModelPlayer extends JModel {
 		$sql = "SELECT PT.*, SL.English AS position FROM #__bbla_Player_Types PT 
 			INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
 			WHERE PT.ID = ".$playerType;
-		//$qry = $this->dbHandle->query($sql)->fetch();
 		$this->joomlaDb->setQuery($sql);
 		$qry = $this->joomlaDb->loadAssoc();
 		
 		$sql = "SELECT ID, idEquipment_Types FROM #__bbla_Equipment_Listing
 			WHERE idPlayer_Levels = 1 AND idPlayer_Types = ".$playerType.
 			" ORDER BY idEquipment_Types";
-		//$equipment = $this->dbHandle->query($sql)->fetchAll();
 		$this->joomlaDb->setQuery($sql);
 		$equipment = $this->joomlaDb->loadAssocList();
 		

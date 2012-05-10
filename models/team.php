@@ -22,8 +22,6 @@ class BbqlModelTeam extends JModel {
 		
 		$this->teamId = JRequest::getVar('teamId');
 		
-		//$this->dbHandle = $bbqlDb;
-		
 		$this->joomlaDb = JFactory::getDBO();
 		
 		// include the utilities class
@@ -94,8 +92,6 @@ class BbqlModelTeam extends JModel {
 		$sql = "SELECT * FROM #__bbla_Player_Listing WHERE teamHash = '".$this->teamId."' ORDER BY bRetired, iNumber";
 		$this->joomlaDb->setQuery($sql);
 		return $this->joomlaDb->loadAssocList();
-//		$rosterAllFields = $this->dbHandle->query($sql)->fetchAll();
-//		return $rosterAllFields;
 	}
 	
 	function getMatchHistory() {
@@ -509,6 +505,7 @@ class BbqlModelTeam extends JModel {
 				if (strpos($formFields, 'playerTypeId_') !== false) {
 					//if it's not empty, look up the player type and price
 					if ($_POST[$formFields] != "") {
+						// TODO: Remove queries below and reinstate getPlayerTypeDetails
 						//$this->player->getPlayerTypeDetails(substr($formFields, 13));
 						
 						$sql = "SELECT PT.*, SL.English AS position FROM #__bbla_Player_Types PT 
