@@ -258,6 +258,7 @@ class BbqlModelTeam extends JModel {
 			$errorMsg = array();
 			$cost = 0;
 			$cheerSql = "";
+			$assistantSql = "";
 			$apothSql = "";
 			$rerollSql = "";
 			//cheerleaders
@@ -285,7 +286,7 @@ class BbqlModelTeam extends JModel {
 					$fireMsg[] = "1 assistant coach was fired.";
 					break;
 				default:
-					$cheerSql = "UPDATE Team_Listing SET iAssistantCoaches = iAssistantCoaches + ".$_POST['assistantCoaches']." WHERE teamHash = '".$this->teamId."'";
+					$assistantSql = "UPDATE Team_Listing SET iAssistantCoaches = iAssistantCoaches + ".$_POST['assistantCoaches']." WHERE teamHash = '".$this->teamId."'";
 					$hireMsg[] = $_POST['assistantCoaches']." assistant coach(es) hired.";
 					$cost = $cost + ($_POST['assistantCoaches']*10000);
 					break;
@@ -334,6 +335,7 @@ class BbqlModelTeam extends JModel {
 				//else deduct gold and run SQL statements
 				} else {
 					$this->dbHandle->query($cheerSql);
+					$this->dbHandle->query($assistantSql);
 					$this->dbHandle->query($apothSql);
 					$this->dbHandle->query($rerollSql);
 					
