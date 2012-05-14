@@ -4,9 +4,16 @@ defined('_JEXEC') or die('Restricted access');
 
 // create associative array of IDs/Names
 $races = $this->stringsLocalized['races']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$skills = $this->stringsLocalized['skills']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
 $playerLevels = $this->stringsLocalized['playerLevels']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
 $casualtyEffects = $this->stringsLocalized['casualtyEffects']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
+
+//create skill array based off skill ID
+$skillsQry = $this->stringsLocalized['skills']->fetchAll();
+$skills = array();
+foreach ($skillsQry as $row) {
+	$skills[$row['ID']]['description'] = $row['DESCRIPTION'];
+	$skills[$row['ID']]['name'] = $row['English'];
+}
 
 $team = $this->teamInfo['team'];
 
@@ -18,7 +25,6 @@ if ($team['coachId'] == $user->id && $this->FullControl == 1) {
 	$canEdit = true;
 }
 ?>
-
 
 <h4><?php echo $team['strName'] ?></h4>
 
@@ -187,26 +193,28 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
         <?php 
 		//check for level up
 		if ($value['iNbLevelsUp'] > 0) {
-			echo ' <a href="'.$linkRoot.'&view=player&playerId='.$value['playerHash'].'"><img src="components/com_bbql/images/levelUp.png" title="Pending Skill Roll"></a> ';
+			echo ' <a href="'.$linkRoot.'&view=player&playerId='.$value['playerHash'].'" title="Pending Skill Roll" class="tipTip"><img src="components/com_bbql/images/levelUp.png"> ';
 			if ($this->FullControl == 1) {
 				echo '<img src="components/com_bbql/images/die'.$value['LevelUp_iRollResult'].'.png">';
 				echo '<img src="components/com_bbql/images/die'.$value['LevelUp_iRollResult2'].'.png" style="padding-right:10px;">';
 			}
+			echo ' </a> ';
 		}
 		//build default skills string
 		$defaultSkills = "";
+		
 		foreach ($value['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']][0]).", ";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";		
         } 
 		//build acquired skills string
 		$acquiredSkills = "";
 		foreach ($value['AcquiredSkills'] as $val) { 
-        	$acquiredSkills = $acquiredSkills . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']][0]).", ";		
+        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";		
         } 
 		//remove trailing comma and space
 		if (strlen($acquiredSkills)) {
 			$acquiredSkills = substr($acquiredSkills, 0, -2);
-			$combinedSkills = $defaultSkills . '<span class="bonus">' . $acquiredSkills . '</span>';
+			$combinedSkills = $defaultSkills . $acquiredSkills;
 		} else {
 			$defaultSkills = substr($defaultSkills, 0, -2);
 			$combinedSkills = $defaultSkills;
@@ -222,7 +230,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		$dead = "";
 		//check for miss next game
 		if ($value['iMatchSuspended'] == 1)
-			$matchSusp = '<div> <img src="components/com_bbql/images/injured.png" title="Miss Next Game"></div>';
+			$matchSusp = '<div> <img src="components/com_bbql/images/injured.png" title="Miss Next Game" class="tipTip"></div>';
 		
 		foreach ($value['Injuries'] as $val) { 
         	$casualties = $casualties ."<div>".str_replace(" ", "&nbsp;", $casualtyEffects[$val['idPlayer_Casualty_Types']][0])."</div>";		
@@ -232,7 +240,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
         }
 		
 		if ($value['bDead'] == 1)
-			$dead = '<div> <img src="components/com_bbql/images/dead.png" title="Dead!"></div>';
+			$dead = '<div> <img src="components/com_bbql/images/dead.png" title="Dead!" class="tipTip"></div>';
 		
 		if (strlen($matchSusp) || strlen($casualties) || strlen($dead)) {
 			echo '<td>'.$matchSusp.$casualties.$dead.'</td>';
@@ -240,8 +248,8 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 			echo '<td></br></td>';
 		}
 		?>
-        
-		<td align="center"><span title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>"><?php echo $value['idPlayer_Levels'] ?></span></td>
+		
+		<td align="center"><span class="tipTip" title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>">&nbsp; <?php echo $value['idPlayer_Levels'] ?> &nbsp;</span></td>
         <td align="right"><?php echo $value['iExperience'] ?></td> 
 		<td align="right" class="bRight"><?php echo $value['iValue'] ?></td>
 		
@@ -282,7 +290,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		//build default skills string
 		$defaultSkills = "";
 		foreach ($playerPurchase['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']][0]).", ";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";
         }
         $defaultSkills = substr($defaultSkills, 0, -2);
         
@@ -393,3 +401,9 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 	<tr><td><em>none returned</em></td></tr>
 <?php } ?>
 </table>
+
+<script type="text/javascript">
+	jQuery(function(){
+		jQuery(".tipTip").tipTip({delay: 0, maxWidth: "400px"});
+	});
+</script>
