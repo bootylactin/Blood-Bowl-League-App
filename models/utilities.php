@@ -144,23 +144,12 @@ class BbqlModelUtilities extends JModel {
 		}
 	}
 	
-	function updateTeamValues() {
-		global $bbqlDb;
-    	$sql = "SELECT teamHash from Team_Listing where iValue = 1120";
-    	$teams = $bbqlDb->query($sql)->fetchAll();
-    	foreach ($teams as $val) {
-    		$this->updateTeamValue($val['teamHash']);
-    	}
-    }
-	
 	function updateTeamValue($teamId) {
-		global $bbqlDb;
 		//had to break complex update query into three pieces due to processing time
 		//get player values
 		$sql = "SELECT sum(PL.iValue) AS playerValue FROM #__bbla_Player_Listing PL WHERE PL.teamHash = '".$teamId."' AND PL.iMatchSuspended = 0 AND PL.bRetired = 0";
 		$this->joomlaDb->setQuery($sql);
 		$playerValue = $this->joomlaDb->loadResult();
-		//$playerValue = $bbqlDb->query($sql)->fetch();
 		
 		//get value of team items
 		$sql = "SELECT (TL.iPopularity*10 + TL.iCheerleaders*10 + TL.iAssistantCoaches*10 + TL.bApothecary*50 +
@@ -169,9 +158,7 @@ class BbqlModelUtilities extends JModel {
 			WHERE TL.teamHash = '".$teamId."'";
 		$this->joomlaDb->setQuery($sql);
 		$teamValue = $this->joomlaDb->loadResult();
-		//$teamValue = $bbqlDb->query($sql)->fetch();
 		
-
 		//total the player and team items
 		$fullValue = $playerValue + $teamValue;
 		
@@ -180,7 +167,6 @@ class BbqlModelUtilities extends JModel {
 			" WHERE teamHash = '".$teamId."'";
 		$this->joomlaDb->setQuery($sql);
 		$this->joomlaDb->query();
-		//$bbqlDb->query($sql);
 	}
 	
 	function getDefaultPlayerAttributes() {
