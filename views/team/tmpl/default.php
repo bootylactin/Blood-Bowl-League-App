@@ -183,7 +183,15 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 	<tr valign="top" <?php if ($key % 2 == 0) echo 'class="underLineRow"'; ?>>
 		
     	<td><?php echo $value['iNumber']; if ($value['journeyman'] == 1) echo "-J"; ?></td>
-		<td><a href="<?php echo $linkRoot.'&view=player&playerId='.$value['playerHash']; ?>"><?php echo $value['strName'] ?></a></td>
+		<td>
+			<?php if (!$retiredFlag) { ?>
+				<a href="<?php echo $linkRoot.'&view=player&playerId='.$value['playerHash']; ?>">
+					<?php echo $value['strName'] ?>
+				</a>
+			<?php } else { ?>
+				<?php echo $value['strName'] ?>
+			<?php } ?>
+		</td>
 		<td><?php echo $value['position'] ?></td>
 		<td align="center"><span class="<?php echo $value['MAcolor']?>"> <?php echo $value['MA'] ?></span></td>
         <td align="center"><span class="<?php echo $value['STcolor']?>"> <?php echo $value['ST'] ?></span></td>
@@ -192,7 +200,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
         <td>
         <?php 
 		//check for level up
-		if ($value['iNbLevelsUp'] > 0) {
+		if ($value['iNbLevelsUp'] > 0 && !$retiredFlag) {
 			echo ' <a href="'.$linkRoot.'&view=player&playerId='.$value['playerHash'].'" title="Pending Skill Roll" class="tipTip"><img src="components/com_bbql/images/levelUp.png"> ';
 			if ($this->FullControl == 1) {
 				echo '<img src="components/com_bbql/images/die'.$value['LevelUp_iRollResult'].'.png">';
@@ -204,20 +212,20 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		$defaultSkills = "";
 		
 		foreach ($value['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
         } 
 		//build acquired skills string
 		$acquiredSkills = "";
 		foreach ($value['AcquiredSkills'] as $val) { 
-        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";		
+        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
         } 
 		//remove trailing comma and space
 		if (strlen($acquiredSkills)) {
-			$acquiredSkills = substr($acquiredSkills, 0, -2);
-			$combinedSkills = $defaultSkills . $acquiredSkills;
+			$acquiredSkills = substr($acquiredSkills, 0, -9);
+			$combinedSkills = $defaultSkills . $acquiredSkills . '</span>';
 		} else {
-			$defaultSkills = substr($defaultSkills, 0, -2);
-			$combinedSkills = $defaultSkills;
+			$defaultSkills = substr($defaultSkills, 0, -9);
+			$combinedSkills = $defaultSkills . '</span>';
 		}
 		
 		// output combined strings
