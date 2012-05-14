@@ -29,7 +29,7 @@ class BbqlModelUtilities extends JModel
 		$playerPositionNames = $bbqlDb->query($sql);
 		
 		// get skill names
-		$sql = "SELECT Sk.ID, SL.English FROM Skill_Listing Sk INNER JOIN Strings_Localized SL ON Sk.idStrings_Localized = SL.ID";
+		$sql = "SELECT Sk.ID, Sk.Description, SL.English FROM Skill_Listing Sk INNER JOIN Strings_Localized SL ON Sk.idStrings_Localized = SL.ID";
 		$skillNames = $bbqlDb->query($sql);
 		
 		// get player level names
