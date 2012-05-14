@@ -28,6 +28,9 @@ $controller = new $classname();
 // add stylesheet
 $document = & JFactory::getDocument();
 $document->addStyleSheet(JRoute::_('components/com_bbql/css/bbql.css'));
+$document->addStyleSheet(JRoute::_('components/com_bbql/css/tipTip.css'));
+$document->addScript(JRoute::_('components/com_bbql/scripts/jquery-1.7.2.min.js'));
+$document->addScript(JRoute::_('components/com_bbql/scripts/jquery.tipTip.minified.js'));
 
 global $systemPathToComponent, $httpPathToComponent, $userList, $joomlaUser, $joomlaDb, $bbqlDb;
 $systemPathToComponent = dirname(__FILE__);
