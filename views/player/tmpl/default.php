@@ -5,9 +5,16 @@ defined('_JEXEC') or die('Restricted access');
 // create associative array of IDs/Names
 $races = $this->stringsLocalized['races']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
 $playerPositions = $this->stringsLocalized['playerPositions']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$skills = $this->stringsLocalized['skills']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
 $playerLevels = $this->stringsLocalized['playerLevels']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
 $casualtyEffects = $this->stringsLocalized['casualtyEffects']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
+
+//create skill array based off skill ID
+$skillsQry = $this->stringsLocalized['skills']->fetchAll();
+$skills = array();
+foreach ($skillsQry as $row) {
+	$skills[$row['ID']]['description'] = $row['DESCRIPTION'];
+	$skills[$row['ID']]['name'] = $row['English'];
+}
 
 include JRoute::_('components/com_bbql/includes/navigation.php');
 $user =& JFactory::getUser();
@@ -110,30 +117,31 @@ $retiredFlag = false;
         <?php 
 		//check for level up
 		if ($value['iNbLevelsUp'] > 0) {
-			echo '<img src="components/com_bbql/images/levelUp.png" title="Pending Skill Roll"> ';
+			echo ' <a href="'.$linkRoot.'&view=player&playerId='.$value['playerHash'].'" title="Pending Skill Roll" class="tipTip"><img src="components/com_bbql/images/levelUp.png"> ';
 			if ($this->info['FullControl'] == 1) {
 				echo '<img src="components/com_bbql/images/die'.$value['LevelUp_iRollResult'].'.png">';
 				echo '<img src="components/com_bbql/images/die'.$value['LevelUp_iRollResult2'].'.png" style="padding-right:10px;">';
 			}
+			echo ' </a> ';
 		}
 		
 		//build default skills string
 		$defaultSkills = "";
 		foreach ($value['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']][0]).", ";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
         } 
 		//build acquired skills string
 		$acquiredSkills = "";
 		foreach ($value['AcquiredSkills'] as $val) { 
-        	$acquiredSkills = $acquiredSkills . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']][0]).", ";		
+        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
         } 
 		//remove trailing comma and space
 		if (strlen($acquiredSkills)) {
-			$acquiredSkills = substr($acquiredSkills, 0, -2);
-			$combinedSkills = $defaultSkills . '<span class="bonus">' . $acquiredSkills . '</span>';
+			$acquiredSkills = substr($acquiredSkills, 0, -9);
+			$combinedSkills = $defaultSkills . $acquiredSkills . '</span>';
 		} else {
-			$defaultSkills = substr($defaultSkills, 0, -2);
-			$combinedSkills = $defaultSkills;
+			$defaultSkills = substr($defaultSkills, 0, -9);
+			$combinedSkills = $defaultSkills . '</span>';
 		}
 		
 		// output combined strings
@@ -144,7 +152,7 @@ $retiredFlag = false;
 		<?php
 		//check for miss next game
 		if ($value['iMatchSuspended'] == 1)
-			echo ' <img src="components/com_bbql/images/injured.png" title="Miss Next Game"><br/>';
+			echo ' <img src="components/com_bbql/images/injured.png" title="Miss Next Game" class="tipTip"><br/>';
 		$casualties = "";
 		
 		foreach ($value['Injuries'] as $val) { 
@@ -156,10 +164,10 @@ $retiredFlag = false;
         }
 		
 		if ($value['bDead'] == 1)
-			echo ' <img src="components/com_bbql/images/dead.png" title="Dead!"> ';
+			echo ' <img src="components/com_bbql/images/dead.png" title="Dead!" class="tipTip"> ';
 		?>
         <br/></td>
-		<td align="center"><span title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>"><?php echo $value['idPlayer_Levels'] ?></span></td>
+		<td align="center"><span title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>" class="tipTip"><?php echo $value['idPlayer_Levels'] ?></span></td>
         <td align="right"><?php echo $value['iExperience'] ?></td> 
 		<td align="right"><?php echo $value['iValue'] ?></td>
 	</tr>
@@ -178,13 +186,14 @@ $retiredFlag = false;
 			<td>
 	<?php
 	$catHeading = "";
+
 	foreach ($this->skillCat['normal'] as $row) {
 		if ($catHeading != $row['Category']) {
 			echo '</td><td valign="top"><b>'.$row['Category'].'</b><br/>';
 			$catHeading = $row['Category'];
 		}
 		$skillStr = '<input type="radio" name="skillId" id="s'.$row['skillId'].'" value="'.$row['skillId'].'"';
-		$skillName = str_replace(" ", "&nbsp;", $row['skillName']);
+		$skillName = '<span class="tipTip" title="'. $row['description'] .'">' . str_replace(" ", "&nbsp;", $row['skillName']) . '</span>';
 		$className = "";
 		if (strpos($combinedSkills, $skillName) !== false) {
 			$skillStr = $skillStr.' DISABLED';
@@ -262,8 +271,13 @@ $retiredFlag = false;
 		</form>
 <?php
 	}
-
 ?>
+
+<script type="text/javascript">
+	jQuery(function(){
+		jQuery(".tipTip").tipTip({delay: 0, maxWidth: "400px"});
+	});
+</script>
 
 
 
