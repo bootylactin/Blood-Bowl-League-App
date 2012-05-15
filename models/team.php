@@ -421,7 +421,6 @@ class BbqlModelTeam extends JModel {
 						$this->utils->do_dump($row['quantity']);
 						for ($i=1; $i<=$row['quantity']; $i++) {
 							//find an available player number
-							$this->utils->do_dump($numbers);
 							while ($numberCheck == $numbers[$iterator]['iNumber']) {
 								$numberCheck++;
 								$iterator++;

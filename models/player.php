@@ -157,7 +157,8 @@ class BbqlModelPlayer extends JModel {
 	function getPlayerSkillCategoriesWithSkills($playerType) {
 		$struct = array();
 		
-		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName
+		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName, 
+				sl.DESCRIPTION as description
 			FROM #__bbla_Player_Types pt INNER JOIN #__bbla_Player_Type_Skill_Categories_Normal ptscn ON pt.ID = ptscn.idPlayer_Types 
 			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
 			INNER JOIN #__bbla_Skill_Listing sl ON sc.ID = sl.idSkill_Categories
@@ -168,7 +169,8 @@ class BbqlModelPlayer extends JModel {
 		$this->joomlaDb->setQuery($sql);
 		$struct['normal'] = $this->joomlaDb->loadAssocList();
 		
-		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName
+		$sql = "SELECT CONSTANT as Category,sl.ID as skillId, English as skillName, 
+				sl.DESCRIPTION as description
 			FROM #__bbla_Player_Types pt INNER JOIN #__bbla_Player_Type_Skill_Categories_Double ptscn ON pt.ID = ptscn.idPlayer_Types 
 			INNER JOIN #__bbla_Skill_Categories sc ON ptscn.idSkill_Categories = sc.ID
 			INNER JOIN #__bbla_Skill_Listing sl ON sc.ID = sl.idSkill_Categories
