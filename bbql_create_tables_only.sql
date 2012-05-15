@@ -50,7 +50,7 @@ DROP TABLE IF EXISTS `jos_bbla_Skill_Categories`;
 CREATE TABLE jos_bbla_Skill_Categories (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,CONSTANT VARCHAR(255) ,idStrings_Localized INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Skill_Listing`;
-CREATE TABLE jos_bbla_Skill_Listing (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,DATA_CONSTANT CHAR(25) ,idStrings_Localized INTEGER ,idStrings_Formatted_Info INTEGER ,idSkill_Categories INTEGER ,fBonus real ,DESCRIPTION VARCHAR(255) ,iCooldown INTEGER ,iDuration INTEGER ,AI_iWeight INTEGER );
+CREATE TABLE jos_bbla_Skill_Listing (ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,DATA_CONSTANT CHAR(25) ,idStrings_Localized INTEGER ,idStrings_Formatted_Info INTEGER ,idSkill_Categories INTEGER ,fBonus real ,DESCRIPTION VARCHAR(1000) ,iCooldown INTEGER ,iDuration INTEGER ,AI_iWeight INTEGER );
 
 DROP TABLE IF EXISTS `jos_bbla_Statistics_Players`;
 CREATE TABLE `jos_bbla_Statistics_Players` (`ID` INTEGER PRIMARY KEY  NOT NULL AUTO_INCREMENT,`idPlayer_Listing` INTEGER,`iMatchPlayed` INTEGER,`iMVP` INTEGER,`Inflicted_iPasses` INTEGER,`Inflicted_iCatches` INTEGER,`Inflicted_iInterceptions` INTEGER,`Inflicted_iTouchdowns` INTEGER,`Inflicted_iCasualties` INTEGER,`Inflicted_iTackles` INTEGER,`Inflicted_iKO` INTEGER,`Inflicted_iStuns` INTEGER,`Inflicted_iInjuries` INTEGER,`Inflicted_iDead` INTEGER,`Inflicted_iMetersRunning` INTEGER,`Inflicted_iMetersPassing` INTEGER,`Sustained_iInterceptions` INTEGER,`Sustained_iCasualties` INTEGER,`Sustained_iTackles` INTEGER,`Sustained_iKO` INTEGER,`Sustained_iStuns` INTEGER,`Sustained_iInjuries` INTEGER,`Sustained_iDead` INTEGER,`playerHash` CHAR(45));
