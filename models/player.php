@@ -131,14 +131,30 @@ class BbqlModelPlayer extends JModel {
 	function getPlayerSkillsInjuries($playerHash, $playerType) {
 		$skills = array();
 		// default skills
-		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
+		$sql = "SELECT idSkill_Listing as ID, sl.DESCRIPTION as description, loc.English as name
+			FROM #__bbla_Player_Type_Skills pts INNER JOIN #__bbla_Skill_Listing sl ON pts.idSkill_Listing = sl.ID
+			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			WHERE pts.idPlayer_Types = '" . $playerType . "'";
 		$this->joomlaDb->setQuery($sql);
-		$skills['default'] = $this->joomlaDb->loadAssocList();
+		$tmpArray = array();
+		foreach ($this->joomlaDb->loadAssocList() as $row) {
+			$tmpArray[$row['ID']]['name'] = $row['name'];
+			$tmpArray[$row['ID']]['description'] = $row['description'];
+		}
+		$skills['default'] = $tmpArray;
 		
 		// acquired skills
-		$sql = "SELECT idSkill_Listing FROM #__bbla_Player_Skills WHERE playerHash = '" . $playerHash . "'";
+		$sql = "SELECT idSkill_Listing as ID, sl.DESCRIPTION as description, loc.English as name
+			FROM #__bbla_Player_Skills ps INNER JOIN #__bbla_Skill_Listing sl ON ps.idSkill_Listing = sl.ID
+			INNER JOIN #__bbla_Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			WHERE playerHash = '" . $playerHash . "'";
 		$this->joomlaDb->setQuery($sql);
-		$skills['acquired'] = $this->joomlaDb->loadAssocList();
+		$tmpArray = array();
+		foreach ($this->joomlaDb->loadAssocList() as $row) {
+			$tmpArray[$row['ID']]['name'] = $row['name'];
+			$tmpArray[$row['ID']]['description'] = $row['description'];
+		}
+		$skills['acquired'] = $tmpArray;
 		
 		// injuries
 		$sql = "SELECT idPlayer_Casualty_Types FROM #__bbla_Player_Casualties WHERE playerHash = '" . $playerHash . "'";
