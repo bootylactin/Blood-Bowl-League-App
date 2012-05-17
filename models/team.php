@@ -18,7 +18,7 @@ class BbqlModelTeam extends JModel {
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
+		global $httpPathToComponent;
 		
 		$this->teamId = JRequest::getVar('teamId');
 		
@@ -637,17 +637,17 @@ class BbqlModelTeam extends JModel {
 		$filePath = $systemPathToComponent.DS.'uploads'.DS.$teamInfo['strName'].'.db';
 		
 		//now access the DB to determine the teamID
-		$db = 'sqlite:'.$filePath;
+		$db = "sqlite:".$filePath;
 		
 		// create a connection to SQLite3 database file with PDO and return a database handle
 		try{
-			$dbHandle = new PDO($db);
+			$sqliteHandle = new PDO($db);
 		}catch( PDOException $exception ){
 			die($exception->getMessage());
 		}
-
+		
 		$sql = "SELECT ID from Team_Listing LIMIT 1";
-		$teamIdQry = $dbHandle->query($sql)->fetch();
+		$teamIdQry = $sqliteHandle->query($sql)->fetch();
 		$teamId = $teamIdQry[0];
 		
 		//update team info
@@ -660,7 +660,7 @@ class BbqlModelTeam extends JModel {
 			iRerolls = ".$teamInfo['iRerolls'].",
 			iAssistantCoaches = ".$teamInfo['iAssistantCoaches'].
 			" WHERE ID = $teamId";
-		$dbHandle->query($sql);
+		$sqliteHandle->query($sql);
 		
 		/*
 		$sql = "UPDATE SavedGameInfo SET Championship_iTeamValue = ".$teamInfo['team']['iValue'].",
@@ -671,15 +671,15 @@ class BbqlModelTeam extends JModel {
 		
 		//remove players, as we'll reinsert the entire roster
 		$sql = "DELETE FROM Player_Listing";
-		$dbHandle->query($sql);
+		$sqliteHandle->query($sql);
 		
 		//remove skills
 		$sql = "DELETE FROM Player_Skills";
-		$dbHandle->query($sql);
+		$sqliteHandle->query($sql);
 		
 		//remove casualties
 		$sql = "DELETE FROM Player_Casualties";
-		$dbHandle->query($sql);
+		$sqliteHandle->query($sql);
 		
 		//define player fields
 		$playerFields = array('idPlayer_Names','strName','idPlayer_Types','idTeam_Listing_Previous',
@@ -702,29 +702,28 @@ class BbqlModelTeam extends JModel {
 				}
 				$sql = $sql."ID,idTeam_Listing) VALUES (";
 				foreach($playerFields as $value) {
-					$sql = $sql . $dbHandle->quote($row[$value]) . ",";
+					$sql = $sql . $sqliteHandle->quote($row[$value]) . ",";
 				}
 				$sql = $sql .substr($row['playerHash'],33,20).",$teamId)";
-				$dbHandle->query($sql);
+				$sqliteHandle->query($sql);
 				
 				echo $sql."<br><br>";
 				foreach ($roster[$i]['AcquiredSkills'] as $skill) {
 					$sql = "INSERT INTO Player_Skills (idPlayer_Listing,idSkill_Listing) VALUES("
-					.substr($row['playerHash'],33).",".$skill['idSkill_Listing'].")";
-					$dbHandle->query($sql);
+					.substr($row['playerHash'],33).",".$skill['ID'].")";
+					$sqliteHandle->query($sql);
 					echo $sql."<br><br>";
 				}
 				
 				foreach ($roster[$i]['Injuries'] as $injury) {
 					$sql = "INSERT INTO Player_Casualties (idPlayer_Listing,idPlayer_Casualty_Types) VALUES("
 					.substr($row['playerHash'],33,20).",".$injury['idPlayer_Casualty_Types'].")";
-					$dbHandle->query($sql);
+					$sqliteHandle->query($sql);
 					echo $sql."<br><br>";
 				}
 				echo "<br>";
 			}
 		}
-
 		return $filePath;
 	}
 }
