@@ -122,13 +122,34 @@ class BbqlModelPlayer extends JModel {
 
 	
 	function getPlayerSkillsInjuries($playerHash, $playerType) {
+		$skills = array();
+		
 		// default skills
-		$sql = "SELECT idSkill_Listing FROM Player_Type_Skills WHERE idPlayer_Types = '" . $playerType . "'";
+		$sql = "SELECT idSkill_Listing as ID, sl.DESCRIPTION as description, loc.English as name
+			FROM Player_Type_Skills pts INNER JOIN Skill_Listing sl ON pts.idSkill_Listing = sl.ID
+			INNER JOIN Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			WHERE pts.idPlayer_Types = '" . $playerType . "'";
 		$defSkillsQry = $this->dbHandle->query($sql);
+		$tmpArray = array();
+		foreach ($defSkillsQry->fetchAll() as $row) {
+			$tmpArray[$row['ID']]['name'] = $row['name'];
+			$tmpArray[$row['ID']]['description'] = $row['description'];
+		}
+		$skills['default'] = $tmpArray;
 			
 		// acquired skills
-		$sql = "SELECT idSkill_Listing FROM Player_Skills WHERE playerHash = '" . $playerHash . "'";
+		$sql = "SELECT idSkill_Listing as ID, sl.DESCRIPTION as description, loc.English as name
+			FROM Player_Skills ps INNER JOIN Skill_Listing sl ON ps.idSkill_Listing = sl.ID
+			INNER JOIN Strings_Localized loc ON sl.idStrings_Localized = loc.ID
+			WHERE playerHash = '" . $playerHash . "'";
 		$acqSkillsQry = $this->dbHandle->query($sql);
+		$tmpArray = array();
+		foreach ($acqSkillsQry->fetchAll() as $row) {
+			$tmpArray[$row['ID']]['name'] = $row['name'];
+			$tmpArray[$row['ID']]['description'] = $row['description'];
+		}
+		$skills['acquired'] = $tmpArray;
+		
 		// injuries
 		$sql = "SELECT idPlayer_Casualty_Types FROM Player_Casualties WHERE playerHash = '" . $playerHash . "'";
 		$injuryQry = $this->dbHandle->query($sql);
@@ -137,10 +158,6 @@ class BbqlModelPlayer extends JModel {
 				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM Player_Types WHERE ID = '" . $playerType . "'";
 		$attributesQry = $this->dbHandle->query($sql);
 		
-		
-		$skills = array();
-		$skills['default'] = $defSkillsQry->fetchAll();
-		$skills['acquired'] = $acqSkillsQry->fetchAll();
 		$skills['injuries'] = $injuryQry->fetchAll();
 		$skills['attributes'] = $attributesQry->fetchAll();
 		

@@ -26,6 +26,8 @@ if ($value['coachId'] == $user->id && $this->info['FullControl'] == 1) {
 }
 ?>
 
+
+
 <h4><?php echo $this->teamName ?></h4>
 
 <?php include JRoute::_('components/com_bbql/includes/teamNavigation.php'); 
@@ -128,12 +130,12 @@ $retiredFlag = false;
 		//build default skills string
 		$defaultSkills = "";
 		foreach ($value['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $val['description'] .'">' . str_replace(" ", "&nbsp;", $val['name']).", </span>";		
         } 
 		//build acquired skills string
 		$acquiredSkills = "";
 		foreach ($value['AcquiredSkills'] as $val) { 
-        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
+        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $val['description'] .'">' . str_replace(" ", "&nbsp;", $val['name']).", </span>";		
         } 
 		//remove trailing comma and space
 		if (strlen($acquiredSkills)) {
@@ -186,16 +188,18 @@ $retiredFlag = false;
 			<td>
 	<?php
 	$catHeading = "";
-
+	
 	foreach ($this->skillCat['normal'] as $row) {
 		if ($catHeading != $row['Category']) {
 			echo '</td><td valign="top"><b>'.$row['Category'].'</b><br/>';
 			$catHeading = $row['Category'];
 		}
+		
 		$skillStr = '<input type="radio" name="skillId" id="s'.$row['skillId'].'" value="'.$row['skillId'].'"';
 		$skillName = '<span class="tipTip" title="'. $row['description'] .'">' . str_replace(" ", "&nbsp;", $row['skillName']) . '</span>';
 		$className = "";
-		if (strpos($combinedSkills, $skillName) !== false) {
+		if (array_key_exists($row['skillId'], $value['DefaultSkills'])
+		|| array_key_exists($row['skillId'], $value['AcquiredSkills'])) {
 			$skillStr = $skillStr.' DISABLED';
 			$className = "disabled";
 		}
@@ -223,9 +227,10 @@ $retiredFlag = false;
 			$catHeading = $row['Category'];
 		}
 		$skillStr = '<input type="radio" name="skillId" id="s'.$row['skillId'].'" value="'.$row['skillId'].'"';
-		$skillName = str_replace(" ", "&nbsp;", $row['skillName']);
+		$skillName = '<span class="tipTip" title="'. $row['description'] .'">' . str_replace(" ", "&nbsp;", $row['skillName']) . '</span>';
 		$className = "";
-		if (strpos($combinedSkills, $skillName) !== false) {
+		if (array_key_exists($row['skillId'], $value['DefaultSkills'])
+		|| array_key_exists($row['skillId'], $value['AcquiredSkills'])) {
 			$skillStr = $skillStr.' DISABLED';
 			$className = "disabled";
 		}
