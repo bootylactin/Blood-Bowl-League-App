@@ -18,8 +18,6 @@ class BbqlModelUtilities extends JModel {
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $bbqlDb;
-		
 		$this->joomlaDb = JFactory::getDBO();
 		
 		$this->user =& JFactory::getUser();
@@ -34,27 +32,33 @@ class BbqlModelUtilities extends JModel {
 		return $userList;
 	}
 	function getStringsLocalized() {
-		global $bbqlDb;
-		
 		// get races
-		$sql = "SELECT r.ID, SL.English FROM Races r INNER JOIN Strings_Localized SL ON r.idStrings_Localized = SL.ID";
-		$raceNames = $bbqlDb->query($sql);
-		
+		$sql = "SELECT r.ID, SL.English as race FROM #__bbla_Races r INNER JOIN #__bbla_Strings_Localized SL ON r.idStrings_Localized = SL.ID";
+		$this->joomlaDb->setQuery($sql);
+		$raceNames = $this->joomlaDb->loadAssocList('ID');
+
 		// get player position names
-		$sql = "SELECT ID, English FROM Strings_Localized WHERE Label LIKE 'PLAYERTYPE%'";
-		$playerPositionNames = $bbqlDb->query($sql);
+		$sql = "SELECT ID, English as position FROM #__bbla_Strings_Localized WHERE Label LIKE 'PLAYERTYPE%'";
+		$this->joomlaDb->setQuery($sql);
+		$playerPositionNames = $this->joomlaDb->loadAssocList('ID');
 		
 		// get skill names
-		$sql = "SELECT Sk.ID, Sk.Description, SL.English FROM Skill_Listing Sk INNER JOIN Strings_Localized SL ON Sk.idStrings_Localized = SL.ID";
-		$skillNames = $bbqlDb->query($sql);
+		$sql = "SELECT Sk.ID, Sk.Description as description, SL.English as name 
+			FROM Skill_Listing Sk INNER JOIN Strings_Localized SL ON Sk.idStrings_Localized = SL.ID";
+		$this->joomlaDb->setQuery($sql);
+		$skillNames = $this->joomlaDb->loadAssocList('ID');
 		
 		// get player level names
-		$sql = "SELECT ID, English FROM Strings_Localized WHERE Label LIKE 'LEVEL_NAME%'";
-		$playerLevelNames = $bbqlDb->query($sql);
+		$sql = "SELECT ID, English as playerLevel FROM #__bbla_Strings_Localized WHERE Label LIKE 'LEVEL_NAME%'";
+		$this->joomlaDb->setQuery($sql);
+		$playerLevelNames = $this->joomlaDb->loadAssocList('ID');
 		
 		// get casualty effect names
-		$sql = "SELECT pct.ID, sl.English FROM Player_Casualty_Types pct INNER JOIN Strings_Localized sl ON pct.idStrings_Localized_Effect = sl.ID";
-		$casualtyEffectNames = $bbqlDb->query($sql);
+		$sql = "SELECT pct.ID, sl.English as casualty FROM #__bbla_Player_Casualty_Types pct INNER JOIN #__bbla_Strings_Localized sl ON pct.idStrings_Localized_Effect = sl.ID";
+		$this->joomlaDb->setQuery($sql);
+		$casualtyEffectNames = $this->joomlaDb->loadAssocList('ID');
+		
+		$this->getDefaultPlayerAttributes();
 		
 		$struct = array();
 		$struct['races'] = $raceNames;
@@ -170,18 +174,10 @@ class BbqlModelUtilities extends JModel {
 	}
 	
 	function getDefaultPlayerAttributes() {
-		global $bbqlDb;
 		$sql = "SELECT ID, Characteristics_fMovementAllowance MA, Characteristics_fStrength ST,
-				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM Player_Types";
-		$defaults = $bbqlDb->query($sql)->fetchAll();
-		
-		//set up associative array to make player attribute access easy
-		$defaultAttributeMap = array();
-		foreach ($defaults as $row) {
-			$defaultAttributeMap[$row['ID']] = $row;
-		}
-		
-		return $defaultAttributeMap;
+				Characteristics_fAgility AG, Characteristics_fArmourValue AV FROM #__bbla_Player_Types";
+		$this->joomlaDb->setQuery($sql);
+		return $this->joomlaDb->loadAssocList('ID');
 	}
 	
 	function getPlayer_ListingFields() {

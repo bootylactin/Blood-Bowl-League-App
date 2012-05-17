@@ -3,17 +3,9 @@
 defined('_JEXEC') or die('Restricted access');
 
 // create associative array of IDs/Names
-$races = $this->stringsLocalized['races']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$playerLevels = $this->stringsLocalized['playerLevels']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$casualtyEffects = $this->stringsLocalized['casualtyEffects']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-
-//create skill array based off skill ID
-$skillsQry = $this->stringsLocalized['skills']->fetchAll();
-$skills = array();
-foreach ($skillsQry as $row) {
-	$skills[$row['ID']]['description'] = $row['DESCRIPTION'];
-	$skills[$row['ID']]['name'] = $row['English'];
-}
+$races = $this->stringsLocalized['races'];
+$playerLevels = $this->stringsLocalized['playerLevels'];
+$casualtyEffects = $this->stringsLocalized['casualtyEffects'];
 
 $team = $this->teamInfo['team'];
 
@@ -66,7 +58,7 @@ if ($user->authorize('com_bbql', 'admin')) {
 	</tr>
     <tr>
     	<td class="bold">Race:</td>
-        <td class="bRight"><?php echo $races[$team['idRaces']][0] ?></td>
+        <td class="bRight"><?php echo $races[$team['idRaces']]['race'] ?></td>
         <td class="bold">Cheerleaders:</td>
         <td class="bRight"><?php echo $team['iCheerleaders'] ?></td>
         <?php if ($canEdit) { ?>
@@ -241,7 +233,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 			$matchSusp = '<div> <img src="components/com_bbql/images/injured.png" title="Miss Next Game" class="tipTip"></div>';
 		
 		foreach ($value['Injuries'] as $val) { 
-        	$casualties = $casualties ."<div>".str_replace(" ", "&nbsp;", $casualtyEffects[$val['idPlayer_Casualty_Types']][0])."</div>";		
+        	$casualties = $casualties ."<div>".str_replace(" ", "&nbsp;", $casualtyEffects[$val['idPlayer_Casualty_Types']]['casualty'])."</div>";		
         } 
 		if (strlen($casualties)) {
 			$casualties = '<span class="penalty">'.substr($casualties, 0, -2).'</span>';
@@ -257,7 +249,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		}
 		?>
 		
-		<td align="center"><span class="tipTip" title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>">&nbsp; <?php echo $value['idPlayer_Levels'] ?> &nbsp;</span></td>
+		<td align="center"><span class="tipTip" title="<?php echo $playerLevels[$value['idPlayer_Levels']+146]['playerLevel'] ?>">&nbsp; <?php echo $value['idPlayer_Levels'] ?> &nbsp;</span></td>
         <td align="right"><?php echo $value['iExperience'] ?></td> 
 		<td align="right" class="bRight"><?php echo $value['iValue'] ?></td>
 		

@@ -3,18 +3,9 @@
 defined('_JEXEC') or die('Restricted access');
 
 // create associative array of IDs/Names
-$races = $this->stringsLocalized['races']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$playerPositions = $this->stringsLocalized['playerPositions']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$playerLevels = $this->stringsLocalized['playerLevels']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-$casualtyEffects = $this->stringsLocalized['casualtyEffects']->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
-
-//create skill array based off skill ID
-$skillsQry = $this->stringsLocalized['skills']->fetchAll();
-$skills = array();
-foreach ($skillsQry as $row) {
-	$skills[$row['ID']]['description'] = $row['DESCRIPTION'];
-	$skills[$row['ID']]['name'] = $row['English'];
-}
+$playerPositions = $this->stringsLocalized['playerPositions'];
+$playerLevels = $this->stringsLocalized['playerLevels'];
+$casualtyEffects = $this->stringsLocalized['casualtyEffects'];
 
 include JRoute::_('components/com_bbql/includes/navigation.php');
 $user =& JFactory::getUser();
@@ -110,7 +101,7 @@ $retiredFlag = false;
 		echo '<td>'.$value['iNumber'].'</td>';
 		echo '<td>'.$value['strName'].'</td>';
 	} ?>
-		<td><?php echo $playerPositions[$value['positionId']][0] ?></td>
+		<td><?php echo $playerPositions[$value['positionId']]['position'] ?></td>
 		<td align="center"><span class="<?php echo $value['MAcolor']?>"> <?php echo $value['MA'] ?></span></td>
         <td align="center"><span class="<?php echo $value['STcolor']?>"> <?php echo $value['ST'] ?></span></td>
         <td align="center"><span class="<?php echo $value['AGcolor']?>"> <?php echo $value['AG'] ?></span></td>
@@ -158,7 +149,7 @@ $retiredFlag = false;
 		$casualties = "";
 		
 		foreach ($value['Injuries'] as $val) { 
-        	$casualties = $casualties . str_replace(" ", "&nbsp;", $casualtyEffects[$val['idPlayer_Casualty_Types']][0])."<br/>";		
+        	$casualties = $casualties . str_replace(" ", "&nbsp;", $casualtyEffects[$val['idPlayer_Casualty_Types']]['casualty'])."<br/>";		
         } 
 		if (strlen($casualties)) {
 			$casualties = substr($casualties, 0, -2);
@@ -169,7 +160,7 @@ $retiredFlag = false;
 			echo ' <img src="components/com_bbql/images/dead.png" title="Dead!" class="tipTip"> ';
 		?>
         <br/></td>
-		<td align="center"><span title="<?php echo $playerLevels[$value['idPlayer_Levels']+146][0] ?>" class="tipTip"><?php echo $value['idPlayer_Levels'] ?></span></td>
+		<td align="center"><span title="<?php echo $playerLevels[$value['idPlayer_Levels']+146]['playerLevel'] ?>" class="tipTip"><?php echo $value['idPlayer_Levels'] ?></span></td>
         <td align="right"><?php echo $value['iExperience'] ?></td> 
 		<td align="right"><?php echo $value['iValue'] ?></td>
 	</tr>

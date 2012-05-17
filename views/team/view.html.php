@@ -33,6 +33,7 @@ class BbqlViewTeam extends JView
         $this->assignRef( 'leagueName', $info['leagueName']);
         $this->assignRef( 'FullControl', $info['FullControl']);
         $this->assignRef( 'PlayerPurchase', $model->getPlayersForPurchase() );
+		$this->assignRef( 'utils', $model->utils );
         //$this->assignRef( 'coachesTimeZones', $leagueModel->coachesTimeZones );
 		
 		if ($info['FullControl']) {
