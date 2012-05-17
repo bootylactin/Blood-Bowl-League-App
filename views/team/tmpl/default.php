@@ -212,12 +212,12 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		$defaultSkills = "";
 		
 		foreach ($value['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $val['description'] .'">' . str_replace(" ", "&nbsp;", $val['name']).", </span>";		
         } 
 		//build acquired skills string
 		$acquiredSkills = "";
 		foreach ($value['AcquiredSkills'] as $val) { 
-        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name']).", </span>";		
+        	$acquiredSkills = $acquiredSkills . '<span class="bonus tipTip" title="'. $val['description'] .'">' . str_replace(" ", "&nbsp;", $val['name']).", </span>";		
         } 
 		//remove trailing comma and space
 		if (strlen($acquiredSkills)) {
@@ -298,7 +298,7 @@ foreach ($this->teamInfo['roster'] as $key => $value) {
 		//build default skills string
 		$defaultSkills = "";
 		foreach ($playerPurchase['DefaultSkills'] as $val) { 
-        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $skills[$val['idSkill_Listing']]['description'] .'">' . str_replace(" ", "&nbsp;", $skills[$val['idSkill_Listing']]['name'])."</span>, ";
+        	$defaultSkills = $defaultSkills . '<span class="tipTip" title="'. $val['description'] .'">' . str_replace(" ", "&nbsp;", $val['name'])."</span>, ";
         }
         $defaultSkills = substr($defaultSkills, 0, -2);
         
