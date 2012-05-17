@@ -62,6 +62,7 @@ class BbqlModelLeague extends JModel
 	}
 	
 	function __destruct() {
+		unset($this->joomlaDb);
 		unset($this->dbHandle);
 	}
 	
@@ -132,6 +133,7 @@ class BbqlModelLeague extends JModel
 		return $this->joomlaDb->loadAssocList();
 	}
 	
+	//TODO: convert to joomlaDb
 	function getLeagueLeaders() {
 		$returnStruct = array();
 		
@@ -159,6 +161,7 @@ class BbqlModelLeague extends JModel
 		return $returnStruct;
 	}
 	
+	//TODO: show match statistics on match report view
 	function getMatchReport($matchId) {
 		/*
 		//connect to the match report file
@@ -214,6 +217,7 @@ class BbqlModelLeague extends JModel
 		 */
 	}
 	
+	//TODO: convert to joomlaDb
 	function reRollWinnings() {
 		$team = JRequest::getVar('team');
 		$reroll =  JRequest::getVar('reroll');
@@ -277,6 +281,7 @@ class BbqlModelLeague extends JModel
 		$this->dbHandle->query($sql3);
 	}
 	
+	//TODO: convert to joomlaDb
 	function resetLeague() {
 		//remove schedule
 		$sql = "DELETE FROM Calendar WHERE leagueId = ". $this->leagueId;
@@ -300,6 +305,7 @@ class BbqlModelLeague extends JModel
 		}
 	}
 	
+	//TODO: convert to joomlaDb
 	function deleteLeague() {
 		$this->resetLeague();
 		
@@ -322,6 +328,7 @@ class BbqlModelLeague extends JModel
 		$this->dbHandle->query($sql);
 	}
 	
+	//TODO: convert to joomlaDb
 	function changeCoach() {
 		$returnStruct = array();
 		

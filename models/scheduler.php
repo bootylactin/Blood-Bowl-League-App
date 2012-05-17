@@ -40,6 +40,7 @@ class BbqlModelScheduler extends JModel {
 		unset($this->dbHandle);
 	}
 	
+	//TODO: convert to joomlaDb
 	function createLeagueSchedule() {
 		$round = 0;
 		//grab the schedule matrix

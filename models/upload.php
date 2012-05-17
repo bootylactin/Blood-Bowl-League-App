@@ -75,6 +75,7 @@ class BbqlModelUpload extends JModel
 	/*
 	 * TEAM FILE UPLOADS
 	 */
+	//TODO: convert to joomlaDb
 	function uploadTeamFile($teamType, $password, $fullControl) {
 		//if team is joining for first time, check the password if applicable
 		if ($teamType == "joinLeague" && $password != "") {
@@ -300,6 +301,7 @@ class BbqlModelUpload extends JModel
 			echo 'There was an error during the file upload.  Please try again.'; // It failed :(.
 	}
 	
+	//TODO: convert to joomlaDb
 	function uploadMatchReport($revert=false) {
 		$upload_path = $this->httpPathToComponent.DS.'uploads'.DS.$this->leagueId.DS; // The final location of the processed file.
 		

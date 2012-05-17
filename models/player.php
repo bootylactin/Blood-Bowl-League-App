@@ -19,7 +19,7 @@ class BbqlModelPlayer extends JModel {
 	function __construct() {
 		parent::__construct();
 		
-		global $systemPathToComponent, $httpPathToComponent, $joomlaDb, $bbqlDb;
+		global $httpPathToComponent;
 		
 		$this->playerId = JRequest::getVar('playerId');
 		
