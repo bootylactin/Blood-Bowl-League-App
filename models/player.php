@@ -132,6 +132,7 @@ class BbqlModelPlayer extends JModel {
 		$defSkillsQry = $this->dbHandle->query($sql);
 		$tmpArray = array();
 		foreach ($defSkillsQry->fetchAll() as $row) {
+			$tmpArray[$row['ID']]['ID'] = $row['ID'];
 			$tmpArray[$row['ID']]['name'] = $row['name'];
 			$tmpArray[$row['ID']]['description'] = $row['description'];
 		}
@@ -145,6 +146,7 @@ class BbqlModelPlayer extends JModel {
 		$acqSkillsQry = $this->dbHandle->query($sql);
 		$tmpArray = array();
 		foreach ($acqSkillsQry->fetchAll() as $row) {
+			$tmpArray[$row['ID']]['ID'] = $row['ID'];
 			$tmpArray[$row['ID']]['name'] = $row['name'];
 			$tmpArray[$row['ID']]['description'] = $row['description'];
 		}
