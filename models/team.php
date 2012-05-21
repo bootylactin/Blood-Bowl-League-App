@@ -493,6 +493,7 @@ class BbqlModelTeam extends JModel {
 		$teamInfo = $this->getTeamInfo();
 		$coachId = $teamInfo['team']['coachId'];
 		$msg = array();
+		$positionCosts = array();
 
 		//if userID and CoachId don't match
 		if ($this->user->id != $coachId) {
@@ -504,27 +505,9 @@ class BbqlModelTeam extends JModel {
 				if (strpos($formFields, 'playerTypeId_') !== false) {
 					//if it's not empty, look up the player type and price
 					if ($_POST[$formFields] != "") {
-						// TODO: Remove queries below and reinstate getPlayerTypeDetails
-						//$this->player->getPlayerTypeDetails(substr($formFields, 13));
-						
-						$sql = "SELECT PT.*, SL.English AS position FROM #__bbla_Player_Types PT 
-							INNER JOIN #__bbla_Strings_Localized SL ON PT.idStrings_Localized = SL.ID
-							WHERE PT.ID = ".substr($formFields, 13);
-
-						$this->joomlaDb->setQuery($sql);
-						$qry = $this->joomlaDb->loadAssoc();
-						
-						$sql = "SELECT ID, idEquipment_Types FROM #__bbla_Equipment_Listing
-							WHERE idPlayer_Levels = 1 AND idPlayer_Types = ".substr($formFields, 13).
-							" ORDER BY idEquipment_Types";
-
-						$this->joomlaDb->setQuery($sql);
-						$equipment = $this->joomlaDb->loadAssocList();
-						
-						$positionCosts[$qry['position']] = array();
-						$positionCosts[$qry['position']]['quantity'] = $_POST[$formFields];	
-						$positionCosts[$qry['position']]['playerAttributes'] = $qry;
-						$positionCosts[$qry['position']]['playerAttributes']['equipment'] = $equipment;
+						$playerDetails = $this->player->getPlayerTypeDetails(substr($formFields, 13));
+						$playerDetails['quantity'] = $_POST[$formFields];
+						$positionCosts[] = $playerDetails;
 						
 						$msg[] = "Journeyman ".$qry['position'].": ".$_POST[$formFields]." added to your team.";
 					}
@@ -560,7 +543,7 @@ class BbqlModelTeam extends JModel {
 					$pa = $row['playerAttributes'];
 					
 					//set specific values for insertion, all others will = 0
-					$pa['strName'] = "Journeyman ".$position." #".$numberCheck;
+					$pa['strName'] = "Journeyman ".$row['position']." #".$numberCheck;
 					$pa['idPlayer_Types'] = $pa['ID'];
 					$pa['playerHash'] = $this->teamId."-".$nextPlayerId;
 					$pa['teamHash'] = $this->teamId;
