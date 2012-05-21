@@ -708,7 +708,7 @@ class BbqlModelTeam extends JModel {
 				echo $sql."<br><br>";
 				foreach ($roster[$i]['AcquiredSkills'] as $skill) {
 					$sql = "INSERT INTO Player_Skills (idPlayer_Listing,idSkill_Listing) VALUES("
-					.substr($row['playerHash'],33).",".$skill['idSkill_Listing'].")";
+					.substr($row['playerHash'],33).",".$skill['ID'].")";
 					$dbHandle->query($sql);
 					echo $sql."<br><br>";
 				}
