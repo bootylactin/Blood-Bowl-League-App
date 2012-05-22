@@ -133,30 +133,37 @@ class BbqlModelLeague extends JModel
 		return $this->joomlaDb->loadAssocList();
 	}
 	
-	//TODO: convert to joomlaDb
 	function getLeagueLeaders() {
 		$returnStruct = array();
 		
-		$sqlBase = "SELECT tl.strName as TeamName, pl.strName as Name, pl.iNumber, stl.English as Position, ssp.* FROM Statistics_Season_Players ssp INNER JOIN Player_Listing pl ON ssp.playerHash = pl.playerHash " .
-			"INNER JOIN Team_Listing TL ON pl.teamHash = tl.teamHash INNER JOIN Player_Types pt ON pl.idPlayer_Types = pt.ID INNER JOIN Strings_Localized stl ON pt.idStrings_Localized = stl.ID " .
-			"WHERE tl.leagueId = '" . $this->leagueId . "'";
+		$sqlBase = "SELECT tl.strName as TeamName, pl.strName as Name, pl.iNumber, stl.English as Position, ssp.* 
+			FROM #__bbla_Statistics_Season_Players ssp 
+			INNER JOIN #__bbla_Player_Listing pl ON ssp.playerHash = pl.playerHash 
+			INNER JOIN #__bbla_Team_Listing tl ON pl.teamHash = tl.teamHash 
+			INNER JOIN #__bbla_Player_Types pt ON pl.idPlayer_Types = pt.ID 
+			INNER JOIN #__bbla_Strings_Localized stl ON pt.idStrings_Localized = stl.ID
+			WHERE tl.leagueId = '" . $this->leagueId . "'";
 			
 		$sqlTD = $sqlBase." AND Inflicted_iTouchdowns > 0 ORDER BY Inflicted_iTouchdowns DESC Limit 10";
-		$returnStruct['mostTDs'] = $this->dbHandle->query($sqlTD)->fetchAll();
+		$this->joomlaDb->setQuery($sqlTD);
+		$returnStruct['mostTDs'] = $this->joomlaDb->loadAssocList();
 		
 		$sqlCAS = $sqlBase." AND (Inflicted_iCasualties > 0 OR Inflicted_iDead > 0) " .
 			"ORDER BY Inflicted_iCasualties DESC, Inflicted_iDead DESC, Inflicted_iKO DESC, Inflicted_iStuns DESC Limit 10";
-		$returnStruct['mostCAS'] = $this->dbHandle->query($sqlCAS)->fetchAll();
+		$this->joomlaDb->setQuery($sqlCAS);
+		$returnStruct['mostCAS'] = $this->joomlaDb->loadAssocList();
 		
 		$sqlCOMP = $sqlBase." AND Inflicted_iPasses > 0 ORDER BY Inflicted_iPasses DESC, Inflicted_iMetersPassing DESC Limit 10";
-		$returnStruct['mostCOMP'] = $this->dbHandle->query($sqlCOMP)->fetchAll();
+		$this->joomlaDb->setQuery($sqlCOMP);
+		$returnStruct['mostCOMP'] = $this->joomlaDb->loadAssocList();
 		
 		$sqlINT = $sqlBase." AND Inflicted_iInterceptions > 0 ORDER BY Inflicted_iInterceptions DESC Limit 10";
-		$returnStruct['mostINT'] = $this->dbHandle->query($sqlINT)->fetchAll();
+		$this->joomlaDb->setQuery($sqlINT);
+		$returnStruct['mostINT'] = $this->joomlaDb->loadAssocList();
 		
 		$sqlRUSH = $sqlBase." AND Inflicted_iMetersRunning > 0 ORDER BY Inflicted_iMetersRunning DESC Limit 10";
-		$returnStruct['mostRUSH'] = $this->dbHandle->query($sqlRUSH)->fetchAll();
-		
+		$this->joomlaDb->setQuery($sqlRUSH);
+		$returnStruct['mostRUSH'] = $this->joomlaDb->loadAssocList();
 		
 		return $returnStruct;
 	}
