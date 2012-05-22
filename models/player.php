@@ -366,8 +366,7 @@ class BbqlModelPlayer extends JModel {
 			return array("result" => "success", "teamId" => $teamId);
 		}
 	}
-	
-	//TODO: convert to joomlaDb
+
 	function hireJourneyman() {
 		$teamInfo = $this->getTeamAndLeagueInfo();
 		$teamId = $teamInfo['teamId'];
@@ -379,8 +378,10 @@ class BbqlModelPlayer extends JModel {
 			return array("result" => "error");
 		} else {
 			//retrieve player name and value
-			$sql = "SELECT strName, iValue FROM Player_Listing WHERE playerHash = '".$this->playerId."'";
-			$qry = $this->dbHandle->query($sql)->fetch();
+			$sql = "SELECT strName, iValue FROM #__bbla_Player_Listing 
+				WHERE playerHash = '".$this->playerId."'";
+			$this->joomlaDb->setQuery($sql);
+			$qry = $this->joomlaDb->loadAssoc();
 			$name = $qry['strName'];
 			$cost = $qry['iValue']*1000;
 			
@@ -390,20 +391,25 @@ class BbqlModelPlayer extends JModel {
 			}
 			
 			//update name and remove Journeyman flag
-			$sql = "UPDATE Player_Listing SET strName = ".$this->dbHandle->quote($name).", journeyman = 0 WHERE playerHash = '".$this->playerId."'";
-			//die($sql);
-			$this->dbHandle->query($sql);
+			$sql = "UPDATE #__bbla_Player_Listing SET strName = ".$this->joomlaDb->quote($name).", journeyman = 0 
+				WHERE playerHash = '".$this->playerId."'";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			//remove Loner skill
-			$sql = "DELETE FROM Player_Skills WHERE playerHash = '".$this->playerId."' AND idSkill_Listing = 44";
-			$this->dbHandle->query($sql);
+			$sql = "DELETE FROM #__bbla_Player_Skills 
+				WHERE playerHash = '".$this->playerId."' AND idSkill_Listing = 44";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			//run Journeyman routine to see if journeymenHireFire flag needs to be reset
 			$this->processJourneymen($teamId);
 			
 			//deduct gold from treasury
-			$sql="UPDATE Team_Listing SET iCash = iCash - ".$cost." WHERE teamHash = '".$teamId."'";
-			$this->dbHandle->query($sql);
+			$sql="UPDATE #__bbla_Team_Listing SET iCash = iCash - ".$cost." 
+				WHERE teamHash = '".$teamId."'";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			$hireMsg[] = "Journeyman was hired.";
 			$hireMsg[] = "<br/>";
