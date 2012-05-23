@@ -23,6 +23,8 @@ class BbqlModelUpload extends JModel
 		
 		//$this->bbqlHandle = $bbqlDb;
 		
+		$this->joomlaDb = JFactory::getDBO();
+		
 		// include the utilities class
 		include_once($httpPathToComponent.DS.'models'.DS.'utilities.php');
 	
@@ -55,7 +57,7 @@ class BbqlModelUpload extends JModel
 	}
 	
 	function __destruct() {
-		unset($this->dbHandle);
+		unset($this->joomlaDb);
 
 		//delete any previously generated SQL files
 		foreach (glob($this->rel_processing_path."*.sql") as $filename) {
@@ -75,7 +77,6 @@ class BbqlModelUpload extends JModel
 	/*
 	 * TEAM FILE UPLOADS
 	 */
-	//TODO: convert to joomlaDb
 	function uploadTeamFile($teamType, $password, $fullControl) {
 		//if team is joining for first time, check the password if applicable
 		if ($teamType == "joinLeague" && $password != "") {
@@ -102,7 +103,7 @@ class BbqlModelUpload extends JModel
 			
 			// create a connection to SQLite3 database file with PDO and return a database handle
 			try{
-				$dbHandle = new PDO($db);
+				$sqliteHandle = new PDO($db);
 			}catch( PDOException $exception ){
 				die($exception->getMessage());
 			}
@@ -110,7 +111,7 @@ class BbqlModelUpload extends JModel
 			//first, make sure this is a valid team file, if not return with error
 			//Team files do not have the Away_Equipment_Listing table (both MatchReports and Replays do), if found return with error
 			$sql = "SELECT * FROM Away_Equipment_Listing LIMIT 1";
-			if ($dbHandle->query($sql) == true) {
+			if ($sqliteHandle->query($sql) == true) {
 				return -2;
 			}
 			
@@ -118,43 +119,43 @@ class BbqlModelUpload extends JModel
 			//only single player generated teams are allowed.  Online teams have a Calendar, SP do not
 			if ($fullControl == 1) {
 				$sql = "SELECT * FROM Calendar LIMIT 1";
-				if ($dbHandle->query($sql) == true) {
+				if ($sqliteHandle->query($sql) == true) {
 					return -3;
 				}
 			}
 
 			//retrieve players
 			$sql = "SELECT PL.* FROM Player_Listing PL INNER JOIN SavedGameInfo S ON PL.idTeam_Listing = S.Championship_idTeam_Listing";
-			$players = $dbHandle->query($sql)->fetchAll();
+			$players = $sqliteHandle->query($sql)->fetchAll();
 			
 			//retrieve casualties
 			$sql = "SELECT PC.* FROM Player_Casualties PC INNER JOIN Player_Listing PL ON PC.idPlayer_Listing = PL.ID 
 					INNER JOIN SavedGameInfo S ON PL.idTeam_Listing = S.Championship_idTeam_Listing";
-			$casualties = $dbHandle->query($sql)->fetchAll();
+			$casualties = $sqliteHandle->query($sql)->fetchAll();
 			
 			//retrieve skills
 			$sql = "SELECT PS.* FROM Player_Skills PS INNER JOIN Player_Listing PL ON PS.idPlayer_Listing = PL.ID 
 					INNER JOIN SavedGameInfo S ON PL.idTeam_Listing = S.Championship_idTeam_Listing";
-			$skills = $dbHandle->query($sql)->fetchAll();
+			$skills = $sqliteHandle->query($sql)->fetchAll();
 			
 			//store the teamId
 			$teamId = $players[0]['idTeam_Listing'];
 			
 			//pull Team Info for DB insertion
 			$sql = "SELECT * FROM Team_Listing WHERE ID = '" . $teamId . "'";
-			$teamInfo = $dbHandle->query($sql)->fetch();
+			$teamInfo = $sqliteHandle->query($sql)->fetch();
 			
 			//store teamhash, which will be used as key for all queries
 			$teamHash = md5($teamInfo['strName']); 
 			$teamName = $teamInfo['strName'];
 			
-			unset($dbHandle);
-
+			unset($sqliteHandle);
+			
 			if ($teamType == "joinLeague") {
 				//check if team is already part of another league
-				$sql = "SELECT * FROM Team_Listing WHERE teamHash = '".$teamHash."' AND leagueId <> ".$this->leagueId." AND leagueId IS NOT NULL";
-				$qry = $this->bbqlHandle->query($sql);
-				$isInLeague = $qry->fetch();
+				$sql = "SELECT * FROM #__bbla_Team_Listing WHERE teamHash = '".$teamHash."' AND leagueId <> ".$this->leagueId." AND leagueId IS NOT NULL";
+				$qry = $this->joomlaDb->setQuery($sql);
+				$isInLeague = $this->joomlaDb->loadRow();
 				
 				//if in another league, return with error message;
 				if ($isInLeague) {
@@ -162,17 +163,17 @@ class BbqlModelUpload extends JModel
 				}
 			} else if ($teamType == "existing") {
 				//make sure the team being uploaded is part of this league
-				$sql = "SELECT * FROM Team_Listing WHERE teamHash = '".$teamHash."' AND leagueId = ".$this->leagueId;
+				$sql = "SELECT * FROM #__bbla_Team_Listing WHERE teamHash = '".$teamHash."' AND leagueId = ".$this->leagueId;
 				
-				$qry = $this->bbqlHandle->query($sql);
-				$isInLeague = $qry->fetch();
+				$qry = $this->joomlaDb->setQuery($sql);
+				$isInLeague = $this->joomlaDb->loadRow();
 				
 				//if not in this league, return with error message;
 				if (!$isInLeague) {
 					return 0;
 				}
 			}
-
+			
 			//to overcome stupid bug
 			unset($qry,$sql,$isInLeague);
 
@@ -180,38 +181,44 @@ class BbqlModelUpload extends JModel
 			 * refresh all team information with current, deleting current info first
 			 */
 			//grab current list of player IDs for reference
-			$sql = "SELECT playerHash FROM Player_Listing WHERE teamHash = '".$teamHash."'";
-			$referenceIds = $this->bbqlHandle->query($sql)->fetchAll();
+			//$sql = "SELECT #__bbla_playerHash FROM Player_Listing WHERE teamHash = '".$teamHash."'";
+			//$referenceIds = $this->joomlaDb->setQuery($sql);
 			
 			//delete team info 		
-			$sql = "DELETE FROM Team_Listing WHERE teamHash = '".$teamHash."'";
-			$this->bbqlHandle->query($sql);
+			$sql = "DELETE FROM #__bbla_Team_Listing WHERE teamHash = '".$teamHash."'";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			$currentPlayerList = "";
 			//delete player/casualty/skill info (any retired/dead will be left)
 			foreach($players as $row) {
-				$sql = "DELETE FROM Player_Listing WHERE playerHash = '".$teamHash."-".$row['ID']."'";
-				$this->bbqlHandle->query($sql);
+				$sql = "DELETE FROM #__bbla_Player_Listing WHERE playerHash = '".$teamHash."-".$row['ID']."'";
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query();
 
-				$sql = "DELETE FROM Player_Skills WHERE playerHash = '".$teamHash."-".$row['ID']."'";
-				$this->bbqlHandle->query($sql);
+				$sql = "DELETE FROM #__bbla_Player_Skills WHERE playerHash = '".$teamHash."-".$row['ID']."'";
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query();
 				
-				$sql = "DELETE FROM Player_Casualties WHERE playerHash = '".$teamHash."-".$row['ID']."'";
-				$this->bbqlHandle->query($sql);
+				$sql = "DELETE FROM #__bbla_Player_Casualties WHERE playerHash = '".$teamHash."-".$row['ID']."'";
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query();
 				$currentPlayerList = $currentPlayerList."'".$teamHash."-".$row['ID']."',"; 
 			}
 			//remove trailing comma
 			$currentPlayerList = substr($currentPlayerList, 0, -1);
 			
 			//set any players that are left after the delete to retired
-			$sql = "UPDATE Player_Listing SET bRetired = 1 WHERE teamHash = '".$teamHash."'";
-			$this->bbqlHandle->query($sql);
+			$sql = "UPDATE #__bbla_Player_Listing SET bRetired = 1 WHERE teamHash = '".$teamHash."'";
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			//add any players to the stats table that don't already exist there
 			//first grab a list of IDs that DO exist
-			$sql = "SELECT playerHash FROM Statistics_Season_Players WHERE playerHash IN ($currentPlayerList)";
-			$statPlayers = $this->bbqlHandle->query($sql)->fetchAll();
-
+			$sql = "SELECT playerHash FROM #__bbla_Statistics_Season_Players WHERE playerHash IN ($currentPlayerList)";
+			$this->joomlaDb->setQuery($sql);
+			$statPlayers = $this->joomlaDb->loadAssocList();
+			
 			$statPlayerList = "";
 			foreach($statPlayers as $row) {
 				$statPlayerList = $statPlayerList."'".$row['playerHash']."',"; 
@@ -222,9 +229,10 @@ class BbqlModelUpload extends JModel
 			//compare the list of players in the stats table to those in the player_listing, and insert any new
 			foreach($players as $row) {
 				if (strpos($statPlayerList, "'".$teamHash."-".$row['ID']."'") === false) {
-					$sql = "INSERT INTO Statistics_Season_Players (iSeason,iMatchPlayed,iMVP,Inflicted_iPasses,Inflicted_iCatches,Inflicted_iInterceptions,Inflicted_iTouchdowns,Inflicted_iCasualties,Inflicted_iTackles,Inflicted_iKO,Inflicted_iStuns,Inflicted_iInjuries,Inflicted_iDead,Inflicted_iMetersRunning,Inflicted_iMetersPassing,Sustained_iInterceptions,Sustained_iCasualties,Sustained_iTackles,Sustained_iKO,Sustained_iStuns,Sustained_iInjuries,Sustained_iDead,playerHash)" .
+					$sql = "INSERT INTO #__bbla_Statistics_Season_Players (iSeason,iMatchPlayed,iMVP,Inflicted_iPasses,Inflicted_iCatches,Inflicted_iInterceptions,Inflicted_iTouchdowns,Inflicted_iCasualties,Inflicted_iTackles,Inflicted_iKO,Inflicted_iStuns,Inflicted_iInjuries,Inflicted_iDead,Inflicted_iMetersRunning,Inflicted_iMetersPassing,Sustained_iInterceptions,Sustained_iCasualties,Sustained_iTackles,Sustained_iKO,Sustained_iStuns,Sustained_iInjuries,Sustained_iDead,playerHash)" .
 						" VALUES (1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'".$teamHash."-".$row['ID']."')";
-					$this->bbqlHandle->query($sql);
+					$this->joomlaDb->setQuery($sql);
+					$this->joomlaDb->query();
 				}
 			}
 			
@@ -234,26 +242,27 @@ class BbqlModelUpload extends JModel
 			'idStrings_Formatted_Background','idStrings_Localized_Leitmotiv','iNextPurchase','iAssistantCoaches');
 			
 			//insert team info
-			$sql = "INSERT INTO Team_Listing (";
+			$sql = "INSERT INTO #__bbla_Team_Listing (";
 			foreach($teamFields as $value) {
 				$sql = $sql . $value . ",";
 			}
 			$sql = $sql . "coachId,leagueId,teamHash) VALUES (";
 			foreach($teamFields as $value) {
-				$sql = $sql . $this->bbqlHandle->quote($teamInfo[$value]) . ",";
+				$sql = $sql . $this->joomlaDb->quote($teamInfo[$value]) . ",";
 			}
-			$sql = $sql . $this->bbqlHandle->quote($_POST['coachId']).","
-				. $this->bbqlHandle->quote($this->leagueId).","
+			$sql = $sql . $this->joomlaDb->quote($_POST['coachId']).","
+				. $this->joomlaDb->quote($this->leagueId).","
 				. "'".$teamHash ."')";
 
-			$this->bbqlHandle->query($sql);
+			$this->joomlaDb->setQuery($sql);
+			$this->joomlaDb->query();
 			
 			//define player fields
 			$playerFields = $this->utils->getPlayer_ListingFields();
 					
 			//insert player info
 			foreach($players as $row) {
-				$sql = "INSERT INTO Player_Listing (";
+				$sql = "INSERT INTO #__bbla_Player_Listing (";
 				foreach($playerFields as $value) {
 					$sql = $sql . $value . ",";
 				}
@@ -265,25 +274,28 @@ class BbqlModelUpload extends JModel
 				$row['playerId'] = $row['ID'];
 				
 				foreach($playerFields as $value) {
-					$sql = $sql . $this->bbqlHandle->quote($row[$value]) . ",";
+					$sql = $sql . $this->joomlaDb->quote($row[$value]) . ",";
 				}
 				$sql = substr($sql, 0, -1).")";
 				//die($sql);
-				$this->bbqlHandle->query($sql);
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query($sql);
 			}
 			
 			//insert casualty info
 			foreach($casualties as $row) {
-				$sql = "INSERT INTO Player_Casualties (idPlayer_Casualty_Types,playerHash) VALUES (".$row['idPlayer_Casualty_Types'].",'".$teamHash."-".$row['idPlayer_Listing']."')";
-				$this->bbqlHandle->query($sql);
+				$sql = "INSERT INTO #__bbla_Player_Casualties (idPlayer_Casualty_Types,playerHash) VALUES (".$row['idPlayer_Casualty_Types'].",'".$teamHash."-".$row['idPlayer_Listing']."')";
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query($sql);
 			}
 			//insert skill info
 			foreach($skills as $row) {
-				$sql = "INSERT INTO Player_Skills (idSkill_Listing,playerHash) VALUES (".$row['idSkill_Listing'].",'".$teamHash."-".$row['idPlayer_Listing']."')";
-				$this->bbqlHandle->query($sql);
+				$sql = "INSERT INTO #__bbla_Player_Skills (idSkill_Listing,playerHash) VALUES (".$row['idSkill_Listing'].",'".$teamHash."-".$row['idPlayer_Listing']."')";
+				$this->joomlaDb->setQuery($sql);
+				$this->joomlaDb->query($sql);
 			}
 			
-			unset($this->bbqlHandle);
+			unset($this->joomlaDb);
 		
 			$myTeamIDfile = $upload_path.$teamName.'.db';
 			//now remove an old team ID .db file if it exists
