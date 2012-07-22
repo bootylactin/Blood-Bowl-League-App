@@ -301,6 +301,7 @@ class BbqlModelLeague extends JModel
 	}
 	
 	function deleteLeague() {
+		set_time_limit(120);
 		$this->resetLeague();
 		
 		$sql = "SELECT playerHash FROM Player_Listing pl INNER JOIN Team_Listing tl ON pl.teamHash = tl.teamHash WHERE tl.leagueId = ". $this->leagueId;
