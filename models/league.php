@@ -37,6 +37,10 @@ class BbqlModelLeague extends JModel
 		$sql = "SELECT coachId from Team_Listing WHERE leagueId = ".$this->leagueId;
 		$coachesQry = $this->dbHandle->query($sql);
 		
+		//user
+		$user =& JFactory::getUser();
+		$this->user = $user;
+		
 		if ($coachesQry != false) {
 			$coaches = $coachesQry->fetchAll();
 		
@@ -214,6 +218,15 @@ class BbqlModelLeague extends JModel
 		 */
 	}
 	
+	function isCommissioner() {
+		$league = $this->getLeagueById($this->leagueId);
+
+		if ($this->user->id == $league[0]['CommissionerId'] || $this->user->authorize('com_bbql', 'admin')) {
+			return true;
+		}
+		return false;
+	}
+	
 	function reRollWinnings() {
 		$team = JRequest::getVar('team');
 		$reroll =  JRequest::getVar('reroll');
@@ -301,26 +314,37 @@ class BbqlModelLeague extends JModel
 	}
 	
 	function deleteLeague() {
-		set_time_limit(120);
-		$this->resetLeague();
+		$returnStruct = array();
 		
-		$sql = "SELECT playerHash FROM Player_Listing pl INNER JOIN Team_Listing tl ON pl.teamHash = tl.teamHash WHERE tl.leagueId = ". $this->leagueId;
-		$playerList = $this->dbHandle->query($sql)->fetchAll();
-		foreach ($playerList as $player) {
-			$sql = "DELETE FROM Statistics_Season_Players WHERE playerHash = '".$player['playerHash']."'";
+		if (!$this->isCommissioner()) {
+			$returnStruct['result'] = "error";
+			return $returnStruct;
+		} else {
+
+			set_time_limit(120);
+			$this->resetLeague();
+		
+			$sql = "SELECT playerHash FROM Player_Listing pl INNER JOIN Team_Listing tl ON pl.teamHash = tl.teamHash WHERE tl.leagueId = ". $this->leagueId;
+			$playerList = $this->dbHandle->query($sql)->fetchAll();
+			foreach ($playerList as $player) {
+				$sql = "DELETE FROM Statistics_Season_Players WHERE playerHash = '".$player['playerHash']."'";
+				$this->dbHandle->query($sql);
+				$sql = "DELETE FROM Player_Casualties WHERE playerHash = '".$player['playerHash']."'";
+				$this->dbHandle->query($sql);
+				$sql = "DELETE FROM Player_Skills WHERE playerHash = '".$player['playerHash']."'";
+				$this->dbHandle->query($sql);
+				$sql = "DELETE FROM Player_Listing WHERE playerHash = '".$player['playerHash']."'";
+				$this->dbHandle->query($sql);
+			}
+			$sql = "DELETE FROM Team_Listing WHERE leagueId = ". $this->leagueId;
 			$this->dbHandle->query($sql);
-			$sql = "DELETE FROM Player_Casualties WHERE playerHash = '".$player['playerHash']."'";
+
+			$sql = "DELETE FROM League WHERE ID = ". $this->leagueId;
 			$this->dbHandle->query($sql);
-			$sql = "DELETE FROM Player_Skills WHERE playerHash = '".$player['playerHash']."'";
-			$this->dbHandle->query($sql);
-			$sql = "DELETE FROM Player_Listing WHERE playerHash = '".$player['playerHash']."'";
-			$this->dbHandle->query($sql);
+			
+			$returnStruct['result'] = "success";
+			return $returnStruct;
 		}
-		$sql = "DELETE FROM Team_Listing WHERE leagueId = ". $this->leagueId;
-		$this->dbHandle->query($sql);
-		
-		$sql = "DELETE FROM League WHERE ID = ". $this->leagueId;
-		$this->dbHandle->query($sql);
 	}
 	
 	function changeCoach() {
