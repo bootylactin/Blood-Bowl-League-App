@@ -320,9 +320,10 @@ class BbqlModelLeague extends JModel
 			$returnStruct['result'] = "error";
 			return $returnStruct;
 		} else {
-			
-			$this->resetLeague();
 
+			set_time_limit(120);
+			$this->resetLeague();
+		
 			$sql = "SELECT playerHash FROM Player_Listing pl INNER JOIN Team_Listing tl ON pl.teamHash = tl.teamHash WHERE tl.leagueId = ". $this->leagueId;
 			$playerList = $this->dbHandle->query($sql)->fetchAll();
 			foreach ($playerList as $player) {
