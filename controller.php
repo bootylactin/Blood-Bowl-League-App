@@ -382,11 +382,17 @@ class BbqlController extends JController
 	}
 	
 	function deleteLeague() {
-		$model = &$this->getModel('league');
-		$model->deleteLeague();
 		
-		$return = "index.php?option=com_bbql";
-		$this->setRedirect( $return, "League was deleted." );
+		$model = &$this->getModel('league');
+		$return = $model->deleteLeague();
+		
+		$redirect = "index.php?option=com_bbql";
+
+		if ($return['result'] == "success")
+			$this->setRedirect( $redirect, "League was deleted.");
+		else
+			$this->setRedirect( $redirect, "Only the Commissioner may delete this league.", "error");
+		
 	}
 	
 	function changeCoach() {
