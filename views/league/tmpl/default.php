@@ -296,10 +296,28 @@ if ($user->id == $this->league[0]['CommissionerId'] || $user->authorize('com_bbq
 		    </div>
 		</form>
 	
-			
-
 <?php 		
 	}
+?>
+		<fieldset>
+			<legend>Delete this League</legend>
+			<table>
+				<tr valign="top">
+					<td class="small">Deletes this league entirely.  At the moment, this is used
+					to free up all teams in the league to allow them to join another.</td>
+				</tr>
+				<tr>
+					<td>
+						<?php
+						echo '<p><a href="/index.php?option=com_bbql&task=deleteLeague&leagueId='.$this->leagueId.'"' .
+							' onClick="return (confirm(\'Are you sure you want to delete this league?\n\n'.addslashes($this->league[0]['Name']).'\'))"><b>Delete League</b></a></p>';
+						?>
+					</td>
+
+				</tr>
+			</table>
+		</fieldset>
+<?php
 }
 if ($user->authorize('com_bbql', 'admin')) {
 	echo "<h4>Admin Functions</h4>";
