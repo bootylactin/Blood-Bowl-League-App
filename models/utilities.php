@@ -221,9 +221,18 @@ class BbqlModelUtilities extends JModel {
 			'Statistics_Season_Players','Statistics_Season_Teams','Statistics_Teams',
 			'Strings_Localized','Team_Listing');
 		
-		$tableArray = array('Skill_Listing');
+		//$tableArray = array('Skill_Listing');
 
 		foreach($tableArray AS $tableToConvert) {
+			//first truncate the table
+			$truncate = "TRUNCATE TABLE #__bbla_".$tableToConvert;
+			$joomlaDb->setQuery($truncate);
+			$res = $joomlaDb->query();
+			if (!$res) {
+				echo $joomlaDb->getErrorMsg()."<br/><br/>";	
+			} 
+
+					
 			$startRow = 0;
 			$rowIncrement = 300;
 			$count = 0;
